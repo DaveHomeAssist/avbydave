@@ -1,0 +1,2880 @@
+<!DOCTYPE html>
+<html lang="en" data-av-theme="system" data-av-tool="cue-sheet">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: https:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'">
+<title>Cue Sheet | System by Dave</title>
+<meta name="robots" content="index,follow">
+<meta name="description" content="Cue Sheet is a browser based AV rundown and lightweight layered playback tool with preview, program output, capture inputs, exports, and printable operator copies.">
+<link rel="canonical" href="https://systembydave.com/cue-sheet.html">
+<meta name="theme-color" content="#EEE8DF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C1016" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="System by Dave">
+<meta property="og:title" content="Cue Sheet">
+<meta property="og:description" content="Cue Sheet is a browser based AV rundown and lightweight layered playback tool with preview, program output, capture inputs, exports, and printable operator copies.">
+<meta property="og:url" content="https://systembydave.com/cue-sheet.html">
+<meta property="og:image" content="https://systembydave.com/img/card-cover-banner-wide.png">
+<meta property="og:image:width" content="1024">
+<meta property="og:image:height" content="412">
+<meta property="og:image:alt" content="System by Dave preview banner">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cue Sheet">
+<meta name="twitter:description" content="Cue Sheet is a browser based AV rundown and lightweight layered playback tool with preview, program output, capture inputs, exports, and printable operator copies.">
+<meta name="twitter:image" content="https://systembydave.com/img/card-cover-banner-wide.png">
+<link rel="icon" href="svg/system_by_dave_logo_rust.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="profile/assets/apple-touch-icon.png">
+<style>
+  :root{
+    --bg:#0b0d10;
+    --panel:#12171d;
+    --panel-2:#171e26;
+    --panel-3:#1d252e;
+    --line:#58697d;
+    --line-strong:#71859b;
+    --text:#f6f8fb;
+    --muted:#a9b4c1;
+    --dim:#9ba8b6;
+    --rust:#c96d47;
+    --rust-2:#f09a70;
+    --blue:#72b8ff;
+    --green:#6be092;
+    --amber:#ffd166;
+    --red:#ff6b6b;
+    --purple:#b996ff;
+    --ink:#071016;
+    --radius:8px;
+    --shadow:0 16px 60px rgba(0,0,0,.32);
+    --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --fast:120ms;
+    --med:180ms;
+    --ease:cubic-bezier(.2,.8,.2,1);
+    --press:cubic-bezier(.2,0,0,1);
+    --program:#78ef9d;
+    --preview:#ffd166;
+    /* Bus colors above stay light in both palettes because program green and
+       preview amber carry operational meaning, so their ink stays dark. */
+    --bus-ink:#071016;
+    /* The preview and program monitors are a video raster in both palettes: a
+       monitor reads as black whatever the operator's theme is, so the raster
+       carries its own fixed ink instead of the palette text tokens. */
+    --raster:#05070a;
+    --raster-text:#f7f9fb;
+    --raster-muted:#c9d2dc;
+  }
+  html[data-av-theme][data-av-tool="cue-sheet"]{
+    --av-line:#9a806c;
+    --av-line-strong:#735945;
+  }
+  @media (prefers-color-scheme:dark){
+    html[data-av-theme="system"][data-av-tool="cue-sheet"]{
+      --av-line:#58697d;
+      --av-line-strong:#71859b;
+    }
+  }
+  html[data-av-theme="dark"][data-av-tool="cue-sheet"]{
+    --av-line:#58697d;
+    --av-line-strong:#71859b;
+  }
+
+  *{box-sizing:border-box}
+  html{min-height:100%}
+  body{
+    min-height:100%;
+    margin:0;
+    background:
+      radial-gradient(circle at 16% -12%,rgba(192,98,58,.18),transparent 30rem),
+      linear-gradient(180deg,#0b0d10 0%,#11161b 50%,#080a0d 100%);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.45;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background:
+      repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 1px,transparent 1px 80px),
+      repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 80px);
+    mask-image:linear-gradient(180deg,rgba(0,0,0,.8),rgba(0,0,0,.12));
+  }
+  a{color:inherit}
+  button,input,select,textarea{
+    font:inherit;
+  }
+  button{
+    min-height:44px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--panel-2);
+    color:var(--text);
+    padding:9px 12px;
+    cursor:pointer;
+    user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    transition:
+      transform var(--fast) var(--press),
+      border-color var(--fast) var(--ease),
+      background var(--fast) var(--ease),
+      box-shadow var(--fast) var(--ease),
+      color var(--fast) var(--ease);
+    touch-action:manipulation;
+  }
+  button:hover{
+    border-color:var(--line-strong);
+    background:var(--panel-3);
+    transform:translateY(-1px);
+    box-shadow:0 8px 22px rgba(0,0,0,.18);
+  }
+  button:active,
+  button.is-pressing{
+    transform:translateY(1px) scale(.975);
+    box-shadow:inset 0 2px 5px rgba(0,0,0,.28);
+  }
+  button.primary{
+    background:linear-gradient(180deg,var(--rust-2),var(--rust));
+    border-color:var(--rust);
+    color:#120805;
+    font-weight:800;
+  }
+  button.danger{
+    border-color:rgba(255,107,107,.55);
+    color:#ffd5d5;
+    background:rgba(255,107,107,.1);
+  }
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  a:focus-visible{
+    outline:2px solid var(--blue);
+    outline-offset:3px;
+  }
+  button:disabled{
+    cursor:not-allowed;
+    opacity:.5;
+    transform:none;
+    box-shadow:none;
+  }
+  input,select,textarea{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:#0e1318;
+    color:var(--text);
+    padding:9px 10px;
+    transition:border-color var(--fast) var(--ease),background var(--fast) var(--ease),box-shadow var(--fast) var(--ease);
+  }
+  input,select{min-height:44px}
+  textarea{
+    min-height:42px;
+    resize:vertical;
+  }
+  input:hover,
+  input:focus,
+  select:hover,
+  select:focus,
+  textarea:hover,
+  textarea:focus{
+    border-color:var(--line-strong);
+    background:#111821;
+  }
+  input::placeholder,
+  textarea::placeholder{color:var(--dim)}
+
+  .skip-link{
+    position:absolute;
+    top:12px;
+    left:12px;
+    z-index:1000;
+    background:var(--text);
+    color:var(--ink);
+    padding:10px 14px;
+    border-radius:var(--radius);
+    transform:translateY(-150%);
+    transition:transform var(--med) var(--ease);
+  }
+  .skip-link:focus-visible{transform:translateY(0)}
+  .sr-only{
+    position:absolute;
+    width:1px;
+    height:1px;
+    padding:0;
+    margin:-1px;
+    overflow:hidden;
+    clip:rect(0,0,0,0);
+    white-space:nowrap;
+    border:0;
+  }
+
+  .app{
+    position:relative;
+    z-index:1;
+    min-height:100vh;
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:14px 18px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    background:rgba(11,13,16,.88);
+    backdrop-filter:blur(18px);
+    position:sticky;
+    top:0;
+    z-index:30;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    text-decoration:none;
+  }
+  .brand-mark{
+    width:38px;
+    height:38px;
+    border:1px solid rgba(255,255,255,.24);
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    font-family:Georgia,serif;
+    font-size:19px;
+    color:var(--rust-2);
+    background:#11161c;
+  }
+  .brand-text{
+    display:flex;
+    flex-direction:column;
+    gap:1px;
+  }
+  .brand-text strong{
+    font-size:14px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .brand-text span{
+    color:var(--muted);
+    font-family:var(--mono);
+    font-size:11px;
+  }
+  .top-actions{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .top-link{
+    color:var(--muted);
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    text-decoration:none;
+    transition:color var(--fast) var(--ease);
+  }
+  .top-link:hover{color:var(--text)}
+
+  main{
+    width:100%;
+    max-width:1480px;
+    margin:0 auto;
+    padding:22px 18px 34px;
+  }
+  .shell{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 330px;
+    gap:18px;
+    align-items:start;
+  }
+  .workbench,
+  .side-panel,
+  .hero-panel{
+    background:linear-gradient(180deg,rgba(18,23,29,.96),rgba(12,15,19,.96));
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+  }
+  .hero-panel{
+    margin-bottom:18px;
+    padding:18px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:18px;
+    align-items:end;
+  }
+  .title-stack{
+    min-width:0;
+  }
+  .eyebrow{
+    margin:0 0 10px;
+    color:var(--rust-2);
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+  .show-title{
+    max-width:720px;
+    min-height:54px;
+    padding:8px 10px;
+    border-radius:10px;
+    font-size:clamp(28px,5vw,54px);
+    font-weight:850;
+    line-height:1.04;
+    letter-spacing:-.04em;
+    background:transparent;
+    border-color:transparent;
+  }
+  .show-title:hover,
+  .show-title:focus{
+    background:var(--panel-2);
+    border-color:var(--line);
+  }
+  .hero-actions{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .operator-stage{
+    margin-bottom:18px;
+    padding:16px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(300px,360px);
+    gap:14px;
+    background:
+      linear-gradient(135deg,rgba(114,184,255,.08),transparent 34%),
+      var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+  }
+  .stage-main,
+  .source-rack{
+    min-width:0;
+  }
+  .stage-head,
+  .rack-head,
+  .quick-add-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .stage-head h2,
+  .rack-head h2,
+  .quick-add-head h2{
+    margin:0;
+    font-size:16px;
+    letter-spacing:.01em;
+  }
+  .bus-state,
+  .rack-kicker{
+    color:var(--muted);
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .monitor-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+  }
+  .monitor{
+    min-width:0;
+    margin:0;
+    overflow:hidden;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:var(--panel-2);
+  }
+  .monitor figcaption{
+    min-height:42px;
+    padding:9px 11px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    border-bottom:1px solid var(--line);
+    color:var(--text);
+    background:var(--panel-3);
+    font-family:var(--mono);
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+  }
+  .monitor figcaption span:last-child{
+    color:var(--muted);
+    font-weight:600;
+    letter-spacing:.04em;
+    text-transform:none;
+  }
+  .monitor.preview-monitor{border-top:3px solid var(--preview)}
+  .monitor.program-monitor{border-top:3px solid var(--program)}
+  .monitor-surface{
+    position:relative;
+    aspect-ratio:16 / 9;
+    min-height:180px;
+    overflow:hidden;
+    display:grid;
+    place-items:center;
+    isolation:isolate;
+    background:
+      linear-gradient(45deg,rgba(255,255,255,.025) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.025) 75%),
+      var(--raster);
+    background-size:22px 22px;
+    color:var(--raster-text);
+  }
+  .monitor-surface video,
+  .monitor-surface img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    background:#000;
+  }
+  .monitor-surface audio{
+    width:calc(100% - 28px);
+  }
+  .monitor-slate{
+    width:min(88%,520px);
+    padding:18px;
+    display:grid;
+    gap:7px;
+    text-align:center;
+  }
+  .monitor-slate span{
+    color:var(--raster-muted);
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .monitor-slate strong{
+    color:var(--raster-text);
+    font-size:clamp(16px,2.2vw,26px);
+    line-height:1.2;
+  }
+  .monitor-slate small{
+    color:var(--raster-muted);
+    font-size:12px;
+  }
+  .program-layer{
+    position:absolute;
+    inset:0;
+    display:grid;
+    place-items:center;
+    pointer-events:none;
+  }
+  .program-layer .monitor-slate{
+    text-shadow:0 2px 14px rgba(0,0,0,.7);
+  }
+  .monitor-label{
+    position:absolute;
+    z-index:20;
+    left:10px;
+    bottom:10px;
+    max-width:calc(100% - 20px);
+    padding:5px 8px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:6px;
+    background:rgba(3,5,7,.78);
+    color:var(--raster-text);
+    font-family:var(--mono);
+    font-size:10px;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .transport{
+    margin-top:10px;
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr)) minmax(190px,1.25fr);
+    gap:8px;
+  }
+  .transport button{
+    min-width:0;
+  }
+  .volume-control{
+    min-height:44px;
+    padding:7px 10px;
+    display:grid;
+    grid-template-columns:auto minmax(56px,1fr);
+    align-items:center;
+    gap:8px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--panel-2);
+    color:var(--muted);
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .volume-control input{
+    min-height:44px;
+    padding:0;
+    accent-color:var(--preview);
+  }
+  .source-rack{
+    padding:14px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:var(--panel-2);
+  }
+  .source-fieldset{
+    min-width:0;
+    margin:0 0 12px;
+    padding:0;
+    border:0;
+  }
+  .source-fieldset:last-of-type{margin-bottom:0}
+  .source-fieldset label{display:grid}
+  .source-fieldset > button{width:100%;margin-top:8px}
+  .source-fieldset legend,
+  .field-label{
+    margin:0 0 7px;
+    color:var(--text);
+    font-family:var(--mono);
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+  }
+  .source-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  .source-grid .wide{grid-column:1 / -1}
+  .source-help{
+    margin:9px 0 0;
+    color:var(--dim);
+    font-size:11px;
+    line-height:1.45;
+  }
+  .source-help strong{color:var(--text)}
+  .quick-add-panel{
+    margin-bottom:18px;
+    padding:14px 16px 16px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:var(--panel);
+    box-shadow:var(--shadow);
+  }
+  .quick-add-grid{
+    display:grid;
+    grid-template-columns:repeat(6,minmax(110px,1fr));
+    gap:9px;
+  }
+  .quick-add-btn{
+    min-width:0;
+    min-height:82px;
+    height:100%;
+    padding:12px;
+    display:grid;
+    grid-template-columns:32px minmax(0,1fr);
+    align-content:center;
+    align-items:center;
+    gap:10px;
+    text-align:left;
+  }
+  .quick-add-icon{
+    width:32px;
+    height:32px;
+    display:grid;
+    place-items:center;
+    border:1px solid var(--line-strong);
+    border-radius:7px;
+    color:var(--rust-2);
+    background:var(--panel-2);
+    font-family:var(--mono);
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.08em;
+  }
+  .quick-add-copy{
+    min-width:0;
+    display:grid;
+    gap:3px;
+  }
+  .quick-add-copy strong{
+    color:var(--text);
+    font-size:13px;
+    line-height:1.15;
+  }
+  .quick-add-copy span{
+    color:var(--muted);
+    font-size:10px;
+    line-height:1.25;
+  }
+  .caller-deck-panel{
+    position:relative;
+    overflow:hidden;
+    margin-bottom:18px;
+    padding:16px;
+    background:
+      linear-gradient(135deg,rgba(229,138,92,.12),transparent 34%),
+      linear-gradient(180deg,rgba(18,23,29,.96),rgba(10,13,17,.96));
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+  }
+  .caller-deck-panel::before{
+    content:"";
+    position:absolute;
+    left:18px;
+    right:18px;
+    top:88px;
+    height:1px;
+    background:linear-gradient(90deg,var(--rust-2),rgba(114,184,255,.36),transparent);
+    opacity:.6;
+  }
+  .caller-head{
+    position:relative;
+    z-index:1;
+    display:flex;
+    align-items:end;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:14px;
+  }
+  .caller-head h2{
+    margin:0;
+    font-size:22px;
+    letter-spacing:.01em;
+  }
+  .caller-count{
+    flex:0 0 auto;
+    color:var(--muted);
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .caller-deck{
+    position:relative;
+    z-index:1;
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:10px;
+  }
+  .cue-card{
+    position:relative;
+    min-height:142px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    text-align:left;
+    border-color:rgba(255,255,255,.1);
+    background:
+      linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.018)),
+      #0e1318;
+  }
+  .cue-card::before{
+    content:"";
+    position:absolute;
+    inset:0 auto 0 0;
+    width:4px;
+    border-radius:14px 0 0 14px;
+    background:var(--blue);
+  }
+  .cue-card:hover{
+    border-color:rgba(114,184,255,.55);
+  }
+  .cue-card.is-selected{
+    border-color:var(--blue);
+    box-shadow:0 0 0 2px rgba(114,184,255,.15),0 14px 30px rgba(0,0,0,.24);
+  }
+  .cue-card.status-standby::before{background:var(--purple)}
+  .cue-card.status-go::before{background:var(--green)}
+  .cue-card.status-hold::before{background:var(--amber)}
+  .cue-card.status-issue::before{background:var(--red)}
+  .cue-card-kicker,
+  .cue-card-meta,
+  .cue-card-notes{
+    display:block;
+  }
+  .cue-card-kicker{
+    color:var(--rust-2);
+    font-family:var(--mono);
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+  }
+  .cue-card-title{
+    display:block;
+    color:var(--text);
+    font-size:16px;
+    line-height:1.25;
+  }
+  .cue-card-meta{
+    color:var(--muted);
+    font-family:var(--mono);
+    font-size:11px;
+    line-height:1.35;
+  }
+  .cue-card-notes{
+    color:var(--dim);
+    font-size:12px;
+    line-height:1.35;
+  }
+  .deck-empty{
+    grid-column:1 / -1;
+    padding:18px;
+    border:1px dashed rgba(255,255,255,.18);
+    border-radius:var(--radius);
+    color:var(--muted);
+    background:rgba(255,255,255,.025);
+  }
+
+  .toolbar{
+    display:grid;
+    grid-template-columns:minmax(220px,1fr) auto auto;
+    gap:10px;
+    padding:14px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .filter-group{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 150px;
+    gap:10px;
+  }
+  .button-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+  .toolbar > .button-row{
+    grid-column:1 / -1;
+  }
+  .workbench{
+    overflow:hidden;
+  }
+  .table-wrap{
+    overflow-x:auto;
+    max-width:100%;
+  }
+  table{
+    width:100%;
+    min-width:1060px;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+  thead th{
+    position:sticky;
+    top:68px;
+    z-index:2;
+    padding:10px 8px;
+    color:var(--muted);
+    background:#10151b;
+    border-bottom:1px solid rgba(255,255,255,.1);
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.08em;
+    text-align:left;
+    text-transform:uppercase;
+  }
+  tbody tr{
+    transition:background var(--fast) var(--ease),box-shadow var(--fast) var(--ease);
+  }
+  tbody tr:hover{
+    background:rgba(255,255,255,.035);
+  }
+  tbody tr.selected{
+    background:rgba(114,184,255,.08);
+    box-shadow:inset 3px 0 0 var(--blue);
+  }
+  tbody tr.status-go{box-shadow:inset 3px 0 0 var(--green)}
+  tbody tr.status-hold{box-shadow:inset 3px 0 0 var(--amber)}
+  tbody tr.status-issue{box-shadow:inset 3px 0 0 var(--red)}
+  tbody tr.status-done{opacity:.72}
+  tbody td{
+    padding:8px;
+    border-bottom:1px solid rgba(255,255,255,.07);
+    vertical-align:top;
+  }
+  .drag-cell{
+    width:44px;
+  }
+  .row-grip{
+    width:44px;
+    min-height:44px;
+    padding:0;
+    color:var(--dim);
+    font-family:var(--mono);
+  }
+  .field-small{min-width:82px}
+  .field-medium{min-width:130px}
+  .field-large{min-width:260px}
+  .field-notes{min-width:240px}
+  .row-input,
+  .row-select,
+  .row-textarea{
+    min-height:44px;
+    padding:7px 8px;
+    border-radius:7px;
+    font-size:13px;
+  }
+  .row-input.mono{
+    font-family:var(--mono);
+    font-variant-numeric:tabular-nums;
+  }
+  .row-textarea{
+    min-height:36px;
+    max-height:120px;
+    line-height:1.35;
+  }
+  .empty-state{
+    padding:34px;
+    text-align:center;
+    color:var(--muted);
+  }
+  .empty-state strong{
+    display:block;
+    color:var(--text);
+    margin-bottom:6px;
+  }
+
+  .side{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    min-width:0;
+  }
+  .side-panel{
+    padding:16px;
+  }
+  .panel-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+    padding-bottom:12px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .panel-title h2{
+    margin:0;
+    font-size:13px;
+    font-family:var(--mono);
+    letter-spacing:.1em;
+    text-transform:uppercase;
+  }
+  .panel-title span{
+    color:var(--dim);
+    font-family:var(--mono);
+    font-size:11px;
+  }
+  .stats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .stat{
+    min-width:0;
+    padding:12px;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:var(--radius);
+    background:rgba(255,255,255,.035);
+  }
+  .stat span{
+    display:block;
+    margin-bottom:4px;
+    color:var(--dim);
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .stat strong{
+    display:block;
+    font-family:var(--mono);
+    font-size:18px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .next-cue{
+    display:grid;
+    gap:10px;
+  }
+  .next-card{
+    padding:14px;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:var(--radius);
+    background:#0e1318;
+  }
+  .next-card span{
+    display:block;
+    margin-bottom:6px;
+    color:var(--rust-2);
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .next-card strong{
+    display:block;
+    margin-bottom:6px;
+    font-size:18px;
+    line-height:1.25;
+  }
+  .next-card p{
+    margin:0;
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.45;
+  }
+  .side-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  .side-actions .wide{
+    grid-column:1 / -1;
+  }
+  .layer-list{
+    display:grid;
+    gap:8px;
+  }
+  .layer-row{
+    padding:9px;
+    display:grid;
+    grid-template-columns:42px minmax(0,1fr) auto;
+    align-items:center;
+    gap:9px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--panel-2);
+  }
+  .layer-index{
+    min-height:36px;
+    display:grid;
+    place-items:center;
+    border-radius:6px;
+    color:var(--ink);
+    background:var(--blue);
+    font-family:var(--mono);
+    font-size:11px;
+    font-weight:900;
+  }
+  .layer-row[data-layer="2"] .layer-index{background:var(--purple)}
+  .layer-row[data-layer="3"] .layer-index{background:var(--amber)}
+  .layer-row[data-layer="4"] .layer-index{background:var(--program);color:var(--bus-ink)}
+  .layer-meta{
+    min-width:0;
+    display:grid;
+    gap:3px;
+  }
+  .layer-meta strong,
+  .layer-meta span{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .layer-meta strong{font-size:12px}
+  .layer-meta span{
+    color:var(--dim);
+    font-size:10px;
+  }
+  .layer-controls{
+    display:flex;
+    gap:5px;
+  }
+  .layer-controls button{
+    min-width:44px;
+    min-height:44px;
+    padding:6px;
+    font-family:var(--mono);
+    font-size:10px;
+  }
+  .layer-opacity{
+    grid-column:2 / -1;
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+    align-items:center;
+    gap:7px;
+    color:var(--muted);
+    font-family:var(--mono);
+    font-size:9px;
+    text-transform:uppercase;
+  }
+  .layer-opacity input{
+    min-height:44px;
+    padding:0;
+    accent-color:var(--blue);
+  }
+  .status-chip{
+    display:inline-flex;
+    align-items:center;
+    min-height:24px;
+    padding:3px 7px;
+    border:1px solid var(--line);
+    border-radius:999px;
+    color:var(--muted);
+    background:var(--panel-2);
+    font-family:var(--mono);
+    font-size:9px;
+    font-weight:800;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+  .status-chip.go{border-color:var(--green);color:var(--green)}
+  .timeline-expanded main{
+    max-width:none;
+    padding-left:10px;
+    padding-right:10px;
+  }
+  .timeline-expanded .hero-panel,
+  .timeline-expanded .quick-add-panel,
+  .timeline-expanded .caller-deck-panel,
+  .timeline-expanded .side{
+    display:none;
+  }
+  .timeline-expanded .operator-stage{
+    grid-template-columns:1fr;
+  }
+  .timeline-expanded .source-rack{
+    display:none;
+  }
+  .timeline-expanded .shell{
+    grid-template-columns:1fr;
+  }
+  .timeline-expanded .workbench{
+    min-height:calc(100vh - 470px);
+  }
+  .hint{
+    min-height:21px;
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.45;
+  }
+  .hint.success{color:var(--green)}
+  .hint.error{color:var(--red)}
+  .shortcut-list{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:9px 12px;
+    margin:0;
+    color:var(--muted);
+    font-size:13px;
+  }
+  .shortcut-list dt{
+    min-width:42px;
+    padding:2px 6px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    background:var(--panel-2);
+    color:var(--text);
+    font-family:var(--mono);
+    text-align:center;
+  }
+  .shortcut-list dd{margin:0}
+  .privacy-note{
+    margin:14px 0 0;
+    color:var(--dim);
+    font-size:12px;
+    line-height:1.55;
+  }
+  .feedback-success{
+    animation:confirm var(--med) var(--ease);
+    border-color:rgba(107,224,146,.85) !important;
+  }
+  .feedback-error{
+    animation:shake 160ms cubic-bezier(.3,0,.2,1);
+    border-color:var(--red) !important;
+    box-shadow:0 0 0 3px rgba(255,107,107,.16) !important;
+  }
+  @keyframes confirm{
+    0%{transform:scale(1)}
+    45%{transform:scale(1.02);box-shadow:0 0 0 4px rgba(107,224,146,.14)}
+    100%{transform:scale(1);box-shadow:0 0 0 rgba(107,224,146,0)}
+  }
+  @keyframes shake{
+    0%,100%{transform:translateX(0)}
+    30%{transform:translateX(-4px)}
+    60%{transform:translateX(4px)}
+    82%{transform:translateX(-2px)}
+  }
+
+  .noscript{
+    margin:20px;
+    padding:16px;
+    border:1px solid var(--red);
+    border-radius:var(--radius);
+    background:#231212;
+    color:#ffe0e0;
+  }
+
+  @media (max-width:1120px){
+    .operator-stage{
+      grid-template-columns:1fr;
+    }
+    .quick-add-grid{
+      grid-template-columns:repeat(3,minmax(0,1fr));
+    }
+    .shell{
+      grid-template-columns:1fr;
+    }
+    .caller-deck{
+      grid-template-columns:repeat(3,minmax(0,1fr));
+    }
+    .side{
+      grid-row:1;
+    }
+    .toolbar{
+      grid-template-columns:1fr;
+    }
+    .button-row{
+      justify-content:flex-start;
+    }
+  }
+  @media (max-width:680px){
+    .topbar,
+    .hero-panel{
+      align-items:flex-start;
+      grid-template-columns:1fr;
+      flex-direction:column;
+    }
+    .top-actions,
+    .hero-actions{
+      width:100%;
+      justify-content:space-between;
+    }
+    .caller-head{
+      align-items:flex-start;
+      flex-direction:column;
+    }
+    .caller-deck-panel::before{
+      top:104px;
+    }
+    .caller-deck{
+      grid-template-columns:1fr;
+    }
+    .operator-stage,
+    .quick-add-panel{
+      padding:12px;
+    }
+    .monitor-grid,
+    .source-grid{
+      grid-template-columns:1fr;
+    }
+    .source-grid .wide{grid-column:auto}
+    .transport{
+      grid-template-columns:1fr 1fr;
+    }
+    .volume-control{
+      grid-column:1 / -1;
+    }
+    .quick-add-grid{
+      grid-template-columns:1fr 1fr;
+    }
+    main{
+      padding:12px;
+    }
+    .filter-group{
+      grid-template-columns:1fr;
+    }
+    .stats{
+      grid-template-columns:1fr 1fr;
+    }
+    .side-actions{
+      grid-template-columns:1fr;
+    }
+  }
+  @media print{
+    body{
+      background:#fff;
+      color:#000;
+    }
+    body::before,
+    .topbar,
+    .toolbar,
+    .side,
+    .hero-actions,
+    .caller-deck-panel,
+    .operator-stage,
+    .quick-add-panel,
+    .drag-cell,
+    .row-grip{
+      display:none !important;
+    }
+    main{
+      max-width:none;
+      padding:0;
+    }
+    .shell,
+    .hero-panel{
+      display:block;
+    }
+    .workbench,
+    .hero-panel{
+      border:0;
+      box-shadow:none;
+      background:#fff;
+    }
+    .show-title{
+      color:#000;
+      border:0;
+      padding:0;
+    }
+    .table-wrap{
+      overflow:visible;
+    }
+    table{
+      min-width:0;
+      font-size:10px;
+    }
+    thead th{
+      position:static;
+      color:#000;
+      background:#eee;
+      border-bottom:1px solid #000;
+    }
+    tbody td{
+      border-bottom:1px solid #bbb;
+    }
+    input,select,textarea{
+      border:0;
+      padding:0;
+      color:#000;
+      background:transparent;
+      appearance:none;
+    }
+    textarea{
+      resize:none;
+    }
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,
+    *::before,
+    *::after{
+      animation-duration:1ms !important;
+      transition-duration:1ms !important;
+      scroll-behavior:auto !important;
+    }
+  }
+</style>
+<link rel="stylesheet" href="css/responsive-tables.css">
+<link rel="stylesheet" href="css/sbd-public-nav.css">
+<link rel="stylesheet" href="css/av-theme.css">
+</head>
+<body>
+<h1 style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">Cue Sheet</h1>
+<a class="skip-link" href="#main-content">Skip to Cue Sheet</a>
+<noscript>
+  <div class="noscript">JavaScript is off, so cue editing and exports are unavailable.</div>
+</noscript>
+<div class="app">
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="System by Dave home">
+      <span class="brand-mark">S</span>
+      <span class="brand-text">
+        <strong>Cue Sheet</strong>
+        <span>System by Dave AV tools / cue control</span>
+      </span>
+    </a>
+    <div class="top-actions" aria-label="Related tools">
+      <a class="top-link" href="teleprompter.html">Teleprompter</a>
+      <a class="top-link" href="show-timer.html">Show Timer</a>
+      <a class="top-link" href="index.html">Home</a>
+    </div>
+  </header>
+
+  <main id="main-content" tabindex="-1">
+    <section class="hero-panel" aria-label="Cue sheet setup">
+      <div class="title-stack">
+        <p class="eyebrow">Run of show</p>
+        <label class="sr-only" for="showTitle">Show title</label>
+        <input class="show-title" id="showTitle" type="text" value="Corporate General Session" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="hero-actions">
+        <button type="button" id="sampleBtn">Load Sample</button>
+        <button type="button" id="printBtn">Print</button>
+        <button type="button" id="exportJsonBtn">Export JSON</button>
+        <button type="button" id="exportCsvBtn">Export CSV</button>
+        <button type="button" id="importBtn">Import JSON</button>
+        <input class="sr-only" type="file" id="importFile" accept="application/json,.json" aria-label="Import cue sheet JSON" tabindex="-1">
+      </div>
+    </section>
+
+    <section class="quick-add-panel" aria-labelledby="quickAddTitle">
+      <div class="quick-add-head">
+        <div>
+          <p class="eyebrow">Build the rundown</p>
+          <h2 id="quickAddTitle">Quick add</h2>
+        </div>
+        <span class="rack-kicker">Adds after selected cue</span>
+      </div>
+      <div class="quick-add-grid">
+        <button class="quick-add-btn" type="button" data-quick-add="Video">
+          <span class="quick-add-icon" aria-hidden="true">VID</span>
+          <span class="quick-add-copy"><strong>Video</strong><span>Clip or stream</span></span>
+        </button>
+        <button class="quick-add-btn" type="button" data-quick-add="Audio">
+          <span class="quick-add-icon" aria-hidden="true">AUD</span>
+          <span class="quick-add-copy"><strong>Audio</strong><span>Track or sting</span></span>
+        </button>
+        <button class="quick-add-btn" type="button" data-quick-add="Image">
+          <span class="quick-add-icon" aria-hidden="true">IMG</span>
+          <span class="quick-add-copy"><strong>Image</strong><span>Still or holding slide</span></span>
+        </button>
+        <button class="quick-add-btn" type="button" data-quick-add="Live">
+          <span class="quick-add-icon" aria-hidden="true">IN</span>
+          <span class="quick-add-copy"><strong>Live input</strong><span>Capture or virtual source</span></span>
+        </button>
+        <button class="quick-add-btn" type="button" data-quick-add="Text">
+          <span class="quick-add-icon" aria-hidden="true">TXT</span>
+          <span class="quick-add-copy"><strong>Text</strong><span>Title or operator slate</span></span>
+        </button>
+        <button class="quick-add-btn" type="button" data-quick-add="Color">
+          <span class="quick-add-icon" aria-hidden="true">COL</span>
+          <span class="quick-add-copy"><strong>Color</strong><span>Full-frame safety source</span></span>
+        </button>
+      </div>
+    </section>
+
+    <section class="operator-stage" aria-labelledby="operatorStageTitle">
+      <div class="stage-main">
+        <div class="stage-head">
+          <div>
+            <p class="eyebrow">Live playback</p>
+            <h2 id="operatorStageTitle">Preview / Program</h2>
+          </div>
+          <span class="bus-state" id="programBusStatus">Program clear</span>
+        </div>
+        <div class="monitor-grid">
+          <figure class="monitor preview-monitor">
+            <figcaption><span>Preview</span><span id="previewBusStatus">Selected cue</span></figcaption>
+            <div class="monitor-surface" id="previewSurface" aria-label="Selected cue preview">
+              <div class="monitor-slate"><span>Preview</span><strong>No cue selected</strong><small>Select a cue to inspect its source.</small></div>
+            </div>
+          </figure>
+          <figure class="monitor program-monitor">
+            <figcaption><span>Program</span><span id="programLayerCount">0 layers live</span></figcaption>
+            <div class="monitor-surface" id="programSurface" aria-label="Live layered program output">
+              <div class="monitor-slate"><span>Program</span><strong>Output is clear</strong><small>Take a selected cue live to start playback.</small></div>
+            </div>
+          </figure>
+        </div>
+        <div class="transport" aria-label="Preview and program transport">
+          <button type="button" id="previewPlayBtn">Play Preview</button>
+          <button type="button" id="previewPauseBtn">Pause</button>
+          <button type="button" id="previewMuteBtn" aria-pressed="false">Mute Preview</button>
+          <button type="button" class="primary" id="goLiveBtn">Go Live</button>
+          <button type="button" id="clearLayerBtn">Clear Selected Layer</button>
+          <label class="volume-control" for="previewVolume">Preview level
+            <input id="previewVolume" type="range" min="0" max="1" step="0.05" value="0.8">
+          </label>
+        </div>
+      </div>
+
+      <aside class="source-rack" aria-label="Source and monitor connections">
+        <div class="rack-head">
+          <div>
+            <p class="eyebrow">Source I/O</p>
+            <h2>Connections</h2>
+          </div>
+          <span class="status-chip" id="sourceConnectionState">Idle</span>
+        </div>
+        <fieldset class="source-fieldset">
+          <legend>Selected cue source</legend>
+          <div class="source-grid">
+            <button type="button" id="attachFileBtn">Attach Media File</button>
+            <button type="button" id="removeSourceBtn">Remove Source</button>
+            <input class="sr-only" type="file" id="sourceFileInput" accept="video/*,audio/*,image/*" aria-label="Attach a local media file to the selected cue" tabindex="-1">
+          </div>
+        </fieldset>
+        <fieldset class="source-fieldset">
+          <legend>Capture card / virtual input</legend>
+          <div class="source-grid">
+            <label class="wide" for="captureVideoSelect"><span class="field-label">Video device</span>
+              <select id="captureVideoSelect"><option value="">Detect inputs first</option></select>
+            </label>
+            <label class="wide" for="captureAudioSelect"><span class="field-label">Audio device</span>
+              <select id="captureAudioSelect"><option value="">No capture audio</option></select>
+            </label>
+            <button type="button" id="detectSourcesBtn">Detect Inputs</button>
+            <button type="button" id="connectCaptureBtn">Connect Input</button>
+          </div>
+          <p class="source-help">UVC capture cards and <strong>NDI Virtual Input / Webcam Input</strong> appear here as browser camera devices.</p>
+        </fieldset>
+        <fieldset class="source-fieldset" aria-describedby="ndiNote">
+          <legend>NDI gateway / network media</legend>
+          <label for="networkSourceUrl"><span class="field-label">Browser-playable HTTPS URL</span>
+            <input id="networkSourceUrl" type="url" inputmode="url" placeholder="https://gateway.example/live.m3u8" autocomplete="off" spellcheck="false">
+          </label>
+          <button class="wide" type="button" id="connectNetworkBtn">Attach Network Stream</button>
+          <p class="source-help" id="ndiNote"><strong>Native NDI is not decoded by the browser.</strong> Use NDI Virtual Input or an HTTPS gateway that emits a browser-playable stream. HLS support varies by browser.</p>
+        </fieldset>
+        <fieldset class="source-fieldset">
+          <legend>Program monitor</legend>
+          <div class="source-grid">
+            <label class="wide" for="displaySelect"><span class="field-label">Output display</span>
+              <select id="displaySelect"><option value="default">Default / drag manually</option></select>
+            </label>
+            <button type="button" id="detectDisplaysBtn">Detect Displays</button>
+            <button type="button" id="openOutputBtn">Open Program Window</button>
+          </div>
+        </fieldset>
+        <p class="hint" id="sourceStatus" role="status" aria-live="polite" aria-atomic="true">Select a cue, then attach or connect a source.</p>
+      </aside>
+    </section>
+
+    <section class="caller-deck-panel" aria-label="Cue caller deck">
+      <div class="caller-head">
+        <div>
+          <p class="eyebrow">Caller deck</p>
+          <h2>On deck</h2>
+        </div>
+        <strong class="caller-count" id="callerDeckCount">0 open</strong>
+      </div>
+      <div class="caller-deck" id="callerDeck"></div>
+    </section>
+
+    <div class="shell">
+      <section class="workbench" aria-label="Cue sheet editor">
+        <div class="toolbar">
+          <div class="filter-group">
+            <label class="sr-only" for="searchInput">Search cues</label>
+            <input id="searchInput" type="search" placeholder="Search cues, owners, sources, notes" autocomplete="off">
+            <label class="sr-only" for="statusFilter">Filter by status</label>
+            <select id="statusFilter">
+              <option value="all">All Statuses</option>
+              <option value="Ready">Ready</option>
+              <option value="Standby">Standby</option>
+              <option value="Go">Go</option>
+              <option value="Hold">Hold</option>
+              <option value="Done">Done</option>
+              <option value="Issue">Issue</option>
+            </select>
+          </div>
+          <button type="button" id="timelineExpandBtn" aria-pressed="false">Expand Timeline</button>
+          <button type="button" class="primary" id="addCueBtn">Add Cue</button>
+          <div class="button-row" aria-label="Selected cue actions">
+            <button type="button" id="duplicateBtn">Duplicate</button>
+            <button type="button" id="moveUpBtn">Move Up</button>
+            <button type="button" id="moveDownBtn">Move Down</button>
+            <button type="button" class="danger" id="deleteBtn">Delete</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <caption class="sr-only">Editable cue sheet</caption>
+            <thead>
+              <tr>
+                <th class="drag-cell">Sel</th>
+                <th>Cue</th>
+                <th>Time</th>
+                <th>Type</th>
+                <th>Layer</th>
+                <th>Action</th>
+                <th>Source</th>
+                <th>Owner</th>
+                <th>Status</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="cueBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="emptyState" hidden>
+          <strong>No cues match this view.</strong>
+          Clear search or add a cue to keep building the rundown.
+        </div>
+      </section>
+
+      <aside class="side" aria-label="Cue sheet status">
+        <section class="side-panel">
+          <div class="panel-title">
+            <h2>Show Stats</h2>
+            <span id="storageStatus">Saved</span>
+          </div>
+          <div class="stats">
+            <div class="stat"><span>Total</span><strong id="totalStat">0</strong></div>
+            <div class="stat"><span>Open</span><strong id="openStat">0</strong></div>
+            <div class="stat"><span>Done</span><strong id="doneStat">0</strong></div>
+            <div class="stat"><span>Issues</span><strong id="issueStat">0</strong></div>
+          </div>
+        </section>
+
+        <section class="side-panel" aria-labelledby="layersTitle">
+          <div class="panel-title">
+            <h2 id="layersTitle">Layers</h2>
+            <span>Top to bottom</span>
+          </div>
+          <div class="layer-list" id="layerList"></div>
+        </section>
+
+        <section class="side-panel">
+          <div class="panel-title">
+            <h2>Next Cue</h2>
+            <span id="selectedReadout">None</span>
+          </div>
+          <div class="next-cue">
+            <div class="next-card">
+              <span id="nextMeta">Ready</span>
+              <strong id="nextAction">No open cues</strong>
+              <p id="nextNotes">Add or load cues to begin tracking the show.</p>
+            </div>
+            <div class="side-actions">
+              <button type="button" id="prevCueBtn">Previous</button>
+              <button type="button" id="nextCueBtn">Next</button>
+              <button type="button" class="primary wide" id="takeNextBtn">Take Next Cue</button>
+              <button type="button" class="wide" id="markDoneBtn">Mark Selected Done</button>
+              <button type="button" class="danger wide" id="clearBtn">Clear Sheet</button>
+            </div>
+            <div class="hint" id="hint" role="status" aria-live="polite">Use J and K to move through cues. G takes the next open cue.</div>
+          </div>
+        </section>
+
+        <section class="side-panel">
+          <div class="panel-title">
+            <h2>Shortcuts</h2>
+            <span>Keyboard</span>
+          </div>
+          <dl class="shortcut-list">
+            <dt>N</dt><dd>Add cue</dd>
+            <dt>J</dt><dd>Select next</dd>
+            <dt>K</dt><dd>Select previous</dd>
+            <dt>G</dt><dd>Take next open cue</dd>
+            <dt>L</dt><dd>Take selected cue live</dd>
+            <dt>F</dt><dd>Expand or restore timeline</dd>
+            <dt>D</dt><dd>Mark selected done</dd>
+            <dt>Del</dt><dd>Delete selected cue</dd>
+          </dl>
+          <p class="privacy-note">This page remembers the current show title, cues, filters, and selected cue in this browser.</p>
+        </section>
+      </aside>
+    </div>
+  </main>
+</div>
+
+<script src="js/vendor/gsap.min.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const STORE = 'cueSheet.v1';
+  const STATUSES = ['Ready', 'Standby', 'Go', 'Hold', 'Done', 'Issue'];
+  const SOURCE_KINDS = ['Cue', 'Video', 'Audio', 'Image', 'Live', 'Stream', 'Text', 'Color'];
+  const DEFAULT_LAYERS = [
+    { id:1, name:'Base', visible:true, muted:false, opacity:1 },
+    { id:2, name:'Playback', visible:true, muted:false, opacity:1 },
+    { id:3, name:'Utility', visible:true, muted:false, opacity:1 },
+    { id:4, name:'Overlay', visible:true, muted:false, opacity:1 }
+  ];
+  const QUICK_PRESETS = {
+    Video:{ type:'Video', sourceKind:'Video', action:'Video cue', source:'Attach a video file', layer:2 },
+    Audio:{ type:'Audio', sourceKind:'Audio', action:'Audio cue', source:'Attach an audio file', layer:2 },
+    Image:{ type:'Graphics', sourceKind:'Image', action:'Image cue', source:'Attach an image file', layer:1 },
+    Live:{ type:'Video', sourceKind:'Live', action:'Live input', source:'Connect a capture or virtual input', layer:1 },
+    Text:{ type:'Graphics', sourceKind:'Text', action:'Text overlay', source:'Cue Sheet text slate', layer:4 },
+    Color:{ type:'Graphics', sourceKind:'Color', action:'Safety color', source:'Cue Sheet color source', layer:1 }
+  };
+  const SAMPLE_TITLE = 'Corporate General Session';
+  const SAMPLE_ROWS = [
+    { number:'001', time:'00:00', type:'House', action:'Doors open, walk in loop rolls, house lights at half', source:'Playback', owner:'A1 / LD', status:'Ready', notes:'Confirm logo loop and room music before doors.' },
+    { number:'002', time:'05:00', type:'Video', action:'Opening stinger to screens', source:'Playback Pro', owner:'V1', status:'Standby', notes:'Roll on stage manager cue.' },
+    { number:'003', time:'05:15', type:'Lighting', action:'Stage look one, lectern special up', source:'Console', owner:'LD', status:'Ready', notes:'Keep audience at quarter.' },
+    { number:'004', time:'05:20', type:'Audio', action:'CEO lav live and podium backup open', source:'Wireless rack', owner:'A1', status:'Ready', notes:'Check lav battery before walk up.' },
+    { number:'005', time:'05:30', type:'Stage', action:'CEO enters stage left', source:'Stage manager', owner:'SM', status:'Ready', notes:'Confirm lower third is armed.' },
+    { number:'006', time:'06:00', type:'Graphics', action:'CEO lower third on', source:'Graphics', owner:'GFX', status:'Ready', notes:'Take after first sentence.' },
+    { number:'007', time:'14:30', type:'Video', action:'Product sizzle playback', source:'Playback Pro', owner:'V1', status:'Hold', notes:'Hold until CEO says product roadmap.' },
+    { number:'008', time:'18:45', type:'House', action:'Q and A lights, handheld mics active', source:'Lighting / Audio', owner:'LD / A2', status:'Ready', notes:'A2 to cover aisle runners.' }
+  ];
+
+  const fields = ['number', 'time', 'type', 'layer', 'action', 'source', 'owner', 'status', 'notes'];
+  const searchFields = fields.concat('sourceKind');
+  const els = {
+    showTitle: document.getElementById('showTitle'),
+    searchInput: document.getElementById('searchInput'),
+    statusFilter: document.getElementById('statusFilter'),
+    callerDeck: document.getElementById('callerDeck'),
+    callerDeckCount: document.getElementById('callerDeckCount'),
+    cueBody: document.getElementById('cueBody'),
+    emptyState: document.getElementById('emptyState'),
+    storageStatus: document.getElementById('storageStatus'),
+    selectedReadout: document.getElementById('selectedReadout'),
+    nextMeta: document.getElementById('nextMeta'),
+    nextAction: document.getElementById('nextAction'),
+    nextNotes: document.getElementById('nextNotes'),
+    totalStat: document.getElementById('totalStat'),
+    openStat: document.getElementById('openStat'),
+    doneStat: document.getElementById('doneStat'),
+    issueStat: document.getElementById('issueStat'),
+    hint: document.getElementById('hint'),
+    quickAddGrid: document.querySelector('.quick-add-grid'),
+    previewSurface: document.getElementById('previewSurface'),
+    programSurface: document.getElementById('programSurface'),
+    previewBusStatus: document.getElementById('previewBusStatus'),
+    programBusStatus: document.getElementById('programBusStatus'),
+    programLayerCount: document.getElementById('programLayerCount'),
+    previewPlayBtn: document.getElementById('previewPlayBtn'),
+    previewPauseBtn: document.getElementById('previewPauseBtn'),
+    previewMuteBtn: document.getElementById('previewMuteBtn'),
+    previewVolume: document.getElementById('previewVolume'),
+    goLiveBtn: document.getElementById('goLiveBtn'),
+    clearLayerBtn: document.getElementById('clearLayerBtn'),
+    layerList: document.getElementById('layerList'),
+    sourceConnectionState: document.getElementById('sourceConnectionState'),
+    sourceStatus: document.getElementById('sourceStatus'),
+    attachFileBtn: document.getElementById('attachFileBtn'),
+    removeSourceBtn: document.getElementById('removeSourceBtn'),
+    sourceFileInput: document.getElementById('sourceFileInput'),
+    captureVideoSelect: document.getElementById('captureVideoSelect'),
+    captureAudioSelect: document.getElementById('captureAudioSelect'),
+    detectSourcesBtn: document.getElementById('detectSourcesBtn'),
+    connectCaptureBtn: document.getElementById('connectCaptureBtn'),
+    networkSourceUrl: document.getElementById('networkSourceUrl'),
+    connectNetworkBtn: document.getElementById('connectNetworkBtn'),
+    displaySelect: document.getElementById('displaySelect'),
+    detectDisplaysBtn: document.getElementById('detectDisplaysBtn'),
+    openOutputBtn: document.getElementById('openOutputBtn'),
+    timelineExpandBtn: document.getElementById('timelineExpandBtn'),
+    addCueBtn: document.getElementById('addCueBtn'),
+    duplicateBtn: document.getElementById('duplicateBtn'),
+    moveUpBtn: document.getElementById('moveUpBtn'),
+    moveDownBtn: document.getElementById('moveDownBtn'),
+    deleteBtn: document.getElementById('deleteBtn'),
+    prevCueBtn: document.getElementById('prevCueBtn'),
+    nextCueBtn: document.getElementById('nextCueBtn'),
+    takeNextBtn: document.getElementById('takeNextBtn'),
+    markDoneBtn: document.getElementById('markDoneBtn'),
+    clearBtn: document.getElementById('clearBtn'),
+    sampleBtn: document.getElementById('sampleBtn'),
+    printBtn: document.getElementById('printBtn'),
+    exportJsonBtn: document.getElementById('exportJsonBtn'),
+    exportCsvBtn: document.getElementById('exportCsvBtn'),
+    importBtn: document.getElementById('importBtn'),
+    importFile: document.getElementById('importFile')
+  };
+
+  const runtimeSources = new Map();
+  let programWindow = null;
+  let detectedScreens = [];
+  let previewMuted = false;
+  let motionEnabled = false;
+  const motion = window.gsap?.matchMedia();
+  motion?.add('(prefers-reduced-motion: no-preference)', () => {
+    motionEnabled = true;
+    return () => {
+      motionEnabled = false;
+    };
+  });
+
+  const storage = (() => {
+    try {
+      const probe = 'cueSheet.storage.probe';
+      window.localStorage.setItem(probe, '1');
+      window.localStorage.removeItem(probe);
+      return {
+        available: true,
+        get: key => window.localStorage.getItem(key),
+        set: (key, value) => {
+          window.localStorage.setItem(key, value);
+          return true;
+        },
+        remove: key => window.localStorage.removeItem(key)
+      };
+    } catch (error) {
+      return {
+        available: false,
+        get: () => null,
+        set: () => false,
+        remove: () => {}
+      };
+    }
+  })();
+
+  const state = loadState();
+
+  function loadState() {
+    const fallback = {
+      title: SAMPLE_TITLE,
+      search: '',
+      filter: 'all',
+      selectedId: '',
+      rows: SAMPLE_ROWS.map(row => sanitizeRow(row)),
+      layers: DEFAULT_LAYERS.map(layer => ({ ...layer })),
+      activeLayers: {},
+      ui: { timelineExpanded:false }
+    };
+    const saved = storage.get(STORE);
+    if (!saved) {
+      fallback.selectedId = fallback.rows[0]?.id || '';
+      return fallback;
+    }
+    try {
+      const parsed = JSON.parse(saved);
+      const rows = Array.isArray(parsed.rows) ? parsed.rows.map(row => sanitizeRow(row)).filter(Boolean) : fallback.rows;
+      const selectedId = rows.some(row => row.id === parsed.selectedId) ? parsed.selectedId : rows[0]?.id || '';
+      return {
+        title: sanitizeText(parsed.title, SAMPLE_TITLE),
+        search: sanitizeText(parsed.search, ''),
+        filter: parsed.filter === 'all' || STATUSES.includes(parsed.filter) ? parsed.filter : 'all',
+        selectedId,
+        rows: rows.length ? rows : fallback.rows,
+        layers: sanitizeLayers(parsed.layers),
+        activeLayers: sanitizeActiveLayers(parsed.activeLayers, rows),
+        ui: { timelineExpanded:Boolean(parsed.ui?.timelineExpanded) }
+      };
+    } catch (error) {
+      fallback.selectedId = fallback.rows[0]?.id || '';
+      return fallback;
+    }
+  }
+
+  function sanitizeRow(input) {
+    const source = input || {};
+    const status = STATUSES.includes(source.status) ? source.status : 'Ready';
+    const row = {
+      id: sanitizeText(source.id, createId()),
+      number: sanitizeText(source.number, ''),
+      time: sanitizeText(source.time, ''),
+      type: sanitizeText(source.type, ''),
+      layer: sanitizeLayerNumber(source.layer, defaultLayerFor(source)),
+      action: sanitizeText(source.action, ''),
+      source: sanitizeText(source.source, ''),
+      sourceKind: SOURCE_KINDS.includes(source.sourceKind) ? source.sourceKind : inferSourceKind(source),
+      owner: sanitizeText(source.owner, ''),
+      status,
+      notes: sanitizeText(source.notes, '')
+    };
+    return row;
+  }
+
+  function sanitizeLayerNumber(value, fallback = 1) {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isInteger(parsed) && parsed >= 1 && parsed <= 4 ? parsed : fallback;
+  }
+
+  function defaultLayerFor(source) {
+    const type = String(source?.type || '').toLowerCase();
+    if (type.includes('graphics') || type.includes('text')) return 4;
+    if (type.includes('audio') || type.includes('video')) return 2;
+    if (type.includes('house') || type.includes('lighting')) return 3;
+    return 1;
+  }
+
+  function inferSourceKind(source) {
+    const type = String(source?.type || '').toLowerCase();
+    if (type.includes('video')) return 'Video';
+    if (type.includes('audio')) return 'Audio';
+    if (type.includes('graphic') || type.includes('image')) return 'Image';
+    return 'Cue';
+  }
+
+  function sanitizeLayers(input) {
+    return DEFAULT_LAYERS.map(defaultLayer => {
+      const saved = Array.isArray(input) ? input.find(layer => Number(layer?.id) === defaultLayer.id) : null;
+      return {
+        id: defaultLayer.id,
+        name: sanitizeText(saved?.name, defaultLayer.name).slice(0, 40),
+        visible: saved?.visible !== false,
+        muted: Boolean(saved?.muted),
+        opacity: Math.min(1, Math.max(0, Number(saved?.opacity ?? 1)))
+      };
+    });
+  }
+
+  function sanitizeActiveLayers(input, rows) {
+    const active = {};
+    if (!input || typeof input !== 'object') return active;
+    DEFAULT_LAYERS.forEach(layer => {
+      const cueId = typeof input[layer.id] === 'string' ? input[layer.id] : '';
+      if (rows.some(row => row.id === cueId && row.layer === layer.id)) active[layer.id] = cueId;
+    });
+    return active;
+  }
+
+  function sanitizeText(value, fallback) {
+    if (typeof value !== 'string') return fallback;
+    return value.slice(0, 1200);
+  }
+
+  function createId() {
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+      return window.crypto.randomUUID();
+    }
+    return `cue-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+
+  function saveState() {
+    const saved = storage.set(STORE, JSON.stringify(state));
+    els.storageStatus.textContent = saved ? 'Saved' : 'Storage blocked';
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  function visibleRows() {
+    const needle = state.search.trim().toLowerCase();
+    return state.rows.filter(row => {
+      const statusMatch = state.filter === 'all' || row.status === state.filter;
+      if (!statusMatch) return false;
+      if (!needle) return true;
+      return searchFields.some(field => String(row[field] || '').toLowerCase().includes(needle));
+    });
+  }
+
+  function render() {
+    els.showTitle.value = state.title;
+    els.searchInput.value = state.search;
+    els.statusFilter.value = state.filter;
+    const rows = visibleRows();
+    els.emptyState.hidden = rows.length > 0;
+    els.cueBody.innerHTML = rows.map(rowTemplate).join('');
+    renderCallerDeck();
+    renderStats();
+    renderNextCue();
+    renderPreview();
+    renderLayers();
+    updateButtons();
+  }
+
+  function rowTemplate(row) {
+    const selected = row.id === state.selectedId;
+    const statusClass = `status-${row.status.toLowerCase()}`;
+    return `
+      <tr class="${selected ? 'selected ' : ''}${statusClass}" data-id="${escapeHtml(row.id)}">
+        <td class="drag-cell"><button class="row-grip" type="button" data-select="${escapeHtml(row.id)}" aria-label="Select cue ${escapeHtml(row.number || row.action)}">&gt;</button></td>
+        <td><input class="row-input mono field-small" data-field="number" value="${escapeHtml(row.number)}" aria-label="Cue number"></td>
+        <td><input class="row-input mono field-small" data-field="time" value="${escapeHtml(row.time)}" aria-label="Cue time"></td>
+        <td><input class="row-input field-medium" data-field="type" value="${escapeHtml(row.type)}" aria-label="Cue type"></td>
+        <td>
+          <select class="row-select field-small" data-field="layer" aria-label="Cue layer">
+            ${DEFAULT_LAYERS.map(layer => `<option value="${layer.id}"${row.layer === layer.id ? ' selected' : ''}>L${layer.id}</option>`).join('')}
+          </select>
+        </td>
+        <td><textarea class="row-textarea field-large" data-field="action" aria-label="Cue action">${escapeHtml(row.action)}</textarea></td>
+        <td><input class="row-input field-medium" data-field="source" value="${escapeHtml(row.source)}" aria-label="Cue source"></td>
+        <td><input class="row-input field-medium" data-field="owner" value="${escapeHtml(row.owner)}" aria-label="Cue owner"></td>
+        <td>
+          <select class="row-select field-medium" data-field="status" aria-label="Cue status">
+            ${STATUSES.map(status => `<option value="${status}"${row.status === status ? ' selected' : ''}>${status}</option>`).join('')}
+          </select>
+        </td>
+        <td><textarea class="row-textarea field-notes" data-field="notes" aria-label="Cue notes">${escapeHtml(row.notes)}</textarea></td>
+      </tr>`;
+  }
+
+  function renderCallerDeck() {
+    const openRows = state.rows.filter(row => row.status !== 'Done');
+    els.callerDeckCount.textContent = `${openRows.length} open`;
+    if (!openRows.length) {
+      els.callerDeck.innerHTML = '<div class="deck-empty">Run complete</div>';
+      return;
+    }
+    els.callerDeck.innerHTML = openRows.slice(0, 5).map(callerCardTemplate).join('');
+  }
+
+  function callerCardTemplate(row, index) {
+    const selected = row.id === state.selectedId;
+    const statusClass = `status-${row.status.toLowerCase()}`;
+    const position = index === 0 ? 'Next' : `+${index}`;
+    const meta = [row.number || 'Cue', row.time || 'No time', `L${row.layer}`, row.type || 'Cue', row.owner].filter(Boolean).join(' / ');
+    return `
+      <button class="cue-card ${selected ? 'is-selected ' : ''}${statusClass}" type="button" data-caller="${escapeHtml(row.id)}" aria-label="Select ${escapeHtml(row.number || 'cue')} ${escapeHtml(row.action || 'Untitled cue')}">
+        <span class="cue-card-kicker">${escapeHtml(position)} / ${escapeHtml(row.status)}</span>
+        <strong class="cue-card-title">${escapeHtml(row.action || 'Untitled cue')}</strong>
+        <span class="cue-card-meta">${escapeHtml(meta)}</span>
+        <span class="cue-card-notes">${escapeHtml(row.notes || row.source || 'No notes')}</span>
+      </button>`;
+  }
+
+  function createSlate(doc, row, eyebrow, detail) {
+    const slate = doc.createElement('div');
+    slate.className = 'monitor-slate';
+    if (row?.sourceKind === 'Color') {
+      slate.style.width = '100%';
+      slate.style.height = '100%';
+      slate.style.placeContent = 'center';
+      slate.style.background = 'linear-gradient(135deg,#6d2f1f,#c96d47)';
+    }
+    const kicker = doc.createElement('span');
+    kicker.textContent = eyebrow;
+    const title = doc.createElement('strong');
+    title.textContent = row?.action || detail || 'No cue selected';
+    const note = doc.createElement('small');
+    note.textContent = row ? (detail || row.source || row.notes || 'No source attached') : 'Cue Sheet browser output';
+    slate.append(kicker, title, note);
+    return slate;
+  }
+
+  function createMediaNode(doc, row, source, options = {}) {
+    if (!row) return createSlate(doc, null, 'Cue Sheet', 'No cue selected');
+    if (!source) {
+      const reconnect = ['Video', 'Audio', 'Image', 'Live', 'Stream'].includes(row.sourceKind);
+      return createSlate(doc, row, `Layer ${row.layer} / ${row.sourceKind}`, reconnect ? `Reconnect source: ${row.source || 'media unavailable'}` : row.source);
+    }
+    if (source.kind === 'Image') {
+      const image = doc.createElement('img');
+      image.src = source.url;
+      image.alt = '';
+      image.decoding = 'async';
+      return image;
+    }
+    if (source.kind === 'Audio') {
+      const audioSlate = createSlate(doc, row, `Layer ${row.layer} / Audio`, source.name || row.source);
+      const audio = doc.createElement('audio');
+      audio.src = source.url;
+      audio.preload = 'metadata';
+      audio.controls = Boolean(options.controls);
+      audio.loop = Boolean(options.loop);
+      audioSlate.append(audio);
+      return audioSlate;
+    }
+    if (source.kind === 'Video' || source.kind === 'Stream' || source.kind === 'Live') {
+      const video = doc.createElement('video');
+      video.playsInline = true;
+      video.preload = source.kind === 'Live' ? 'none' : 'metadata';
+      video.controls = Boolean(options.controls);
+      video.loop = source.kind === 'Video';
+      if (source.stream) video.srcObject = source.stream;
+      else video.src = source.url;
+      return video;
+    }
+    return createSlate(doc, row, `Layer ${row.layer} / ${row.sourceKind}`, row.source);
+  }
+
+  function appendMonitorLabel(doc, target, row) {
+    const label = doc.createElement('span');
+    label.className = 'monitor-label';
+    label.textContent = `${row.number || 'Cue'} · L${row.layer} · ${row.action || 'Untitled cue'}`;
+    target.append(label);
+  }
+
+  function applyMediaLevel(root, muted, volume) {
+    root.querySelectorAll('audio,video').forEach(media => {
+      media.muted = Boolean(muted);
+      media.volume = Math.min(1, Math.max(0, Number(volume)));
+    });
+  }
+
+  function playMedia(root) {
+    const media = Array.from(root.querySelectorAll('audio,video'));
+    return Promise.allSettled(media.map(item => item.play()));
+  }
+
+  function pauseMedia(root) {
+    root.querySelectorAll('audio,video').forEach(media => media.pause());
+  }
+
+  function renderPreview(force = false) {
+    const row = selectedRow();
+    const source = row ? runtimeSources.get(row.id) : null;
+    const signature = row ? [row.id, row.action, row.source, row.sourceKind, source?.version || 'stored'].join('|') : 'none';
+    els.previewBusStatus.textContent = row ? `L${row.layer} · ${row.sourceKind}` : 'No selection';
+    if (!force && els.previewSurface.dataset.signature === signature) {
+      applyMediaLevel(els.previewSurface, previewMuted, els.previewVolume.value);
+      return;
+    }
+    pauseMedia(els.previewSurface);
+    els.previewSurface.replaceChildren(createMediaNode(document, row, source, { controls:true }));
+    if (row) appendMonitorLabel(document, els.previewSurface, row);
+    els.previewSurface.dataset.signature = signature;
+    applyMediaLevel(els.previewSurface, previewMuted, els.previewVolume.value);
+  }
+
+  function activeLayerRows() {
+    return DEFAULT_LAYERS.map(layer => {
+      const row = state.rows.find(item => item.id === state.activeLayers[layer.id]);
+      const settings = state.layers.find(item => item.id === layer.id);
+      return row && settings ? { row, settings } : null;
+    }).filter(Boolean);
+  }
+
+  function renderProgram(options = {}) {
+    const active = activeLayerRows();
+    const visible = active.filter(item => item.settings.visible && item.settings.opacity > 0);
+    els.programLayerCount.textContent = `${visible.length} ${visible.length === 1 ? 'layer' : 'layers'} live`;
+    els.programBusStatus.textContent = active.length ? `${active.length} active · ${visible.length} visible` : 'Program clear';
+    els.programSurface.replaceChildren();
+    visible.forEach(({ row, settings }) => {
+      const layer = document.createElement('div');
+      layer.className = 'program-layer';
+      layer.dataset.layer = String(settings.id);
+      layer.style.zIndex = String(settings.id);
+      layer.style.opacity = String(settings.opacity);
+      layer.append(createMediaNode(document, row, runtimeSources.get(row.id), { loop:true }));
+      appendMonitorLabel(document, layer, row);
+      applyMediaLevel(layer, settings.muted, 1);
+      els.programSurface.append(layer);
+    });
+    if (!visible.length) {
+      els.programSurface.append(createSlate(document, null, 'Program', active.length ? 'All active layers are hidden' : 'Output is clear'));
+    }
+    if (motionEnabled && window.gsap && visible.length) {
+      window.gsap.fromTo(els.programSurface.querySelectorAll('.program-layer'),
+        { autoAlpha:0, scale:.985 },
+        { autoAlpha:index => visible[index]?.settings.opacity ?? 1, scale:1, duration:.24, stagger:.035, ease:'power2.out', overwrite:true });
+    }
+    renderProgramWindow();
+    if (options.play) {
+      playMedia(els.programSurface).then(results => {
+        const blocked = results.some(result => result.status === 'rejected');
+        if (blocked) announceSource('Program loaded. Use the media control once if the browser blocked audio autoplay.', 'warn');
+      });
+      if (programWindow && !programWindow.closed) playMedia(programWindow.document.body);
+    }
+  }
+
+  function renderLayers() {
+    els.layerList.innerHTML = state.layers.slice().reverse().map(layer => {
+      const row = state.rows.find(item => item.id === state.activeLayers[layer.id]);
+      const opacity = Math.round(layer.opacity * 100);
+      return `<div class="layer-row" data-layer="${layer.id}">
+        <span class="layer-index">L${layer.id}</span>
+        <span class="layer-meta"><strong>${escapeHtml(layer.name)}</strong><span>${escapeHtml(row?.action || 'Clear')}</span></span>
+        <span class="layer-controls">
+          <button type="button" data-layer-action="visibility" aria-pressed="${layer.visible}" aria-label="${layer.visible ? 'Hide' : 'Show'} layer ${layer.id}">${layer.visible ? 'Hide' : 'Show'}</button>
+          <button type="button" data-layer-action="mute" aria-pressed="${layer.muted}" aria-label="${layer.muted ? 'Unmute' : 'Mute'} layer ${layer.id}">${layer.muted ? 'Sound' : 'Mute'}</button>
+          <button type="button" data-layer-action="clear" aria-label="Clear layer ${layer.id}"${row ? '' : ' disabled'}>Clear</button>
+        </span>
+        <label class="layer-opacity">Opacity
+          <input type="range" min="0" max="1" step="0.05" value="${layer.opacity}" data-layer-action="opacity" aria-label="Layer ${layer.id} opacity">
+          <output>${opacity}%</output>
+        </label>
+      </div>`;
+    }).join('');
+  }
+
+  function ensureProgramWindowShell() {
+    if (!programWindow || programWindow.closed) return null;
+    const doc = programWindow.document;
+    let root = doc.getElementById('cueSheetProgramRoot');
+    if (root) return root;
+    doc.documentElement.lang = 'en';
+    doc.title = `${state.title} · Cue Sheet Program`;
+    doc.body.replaceChildren();
+    doc.body.style.margin = '0';
+    doc.body.style.overflow = 'hidden';
+    doc.body.style.background = '#000';
+    const style = doc.createElement('style');
+    style.textContent = `html,body,#cueSheetProgramRoot{width:100%;height:100%;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}#cueSheetProgramRoot{position:relative;overflow:hidden;display:grid;place-items:center;isolation:isolate}.program-layer{position:absolute;inset:0;display:grid;place-items:center}.program-layer video,.program-layer img{width:100%;height:100%;object-fit:contain;background:#000}.monitor-slate{width:min(88%,900px);padding:32px;display:grid;gap:12px;text-align:center}.monitor-slate span,.monitor-label{font:700 12px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase}.monitor-slate strong{font-size:clamp(28px,5vw,72px);line-height:1.08}.monitor-slate small{font-size:clamp(14px,1.8vw,24px);color:#c5ced8}.monitor-slate audio{width:min(680px,90%);margin:12px auto 0}.monitor-label{position:absolute;left:16px;bottom:16px;z-index:20;padding:7px 10px;border:1px solid rgba(255,255,255,.24);border-radius:6px;background:rgba(0,0,0,.72);font-size:10px}`;
+    doc.head.append(style);
+    root = doc.createElement('main');
+    root.id = 'cueSheetProgramRoot';
+    root.setAttribute('aria-label', 'Cue Sheet program output');
+    doc.body.append(root);
+    return root;
+  }
+
+  function renderProgramWindow() {
+    const root = ensureProgramWindowShell();
+    if (!root) return;
+    const doc = programWindow.document;
+    doc.title = `${state.title} · Cue Sheet Program`;
+    root.replaceChildren();
+    const visible = activeLayerRows().filter(item => item.settings.visible && item.settings.opacity > 0);
+    visible.forEach(({ row, settings }) => {
+      const layer = doc.createElement('div');
+      layer.className = 'program-layer';
+      layer.style.zIndex = String(settings.id);
+      layer.style.opacity = String(settings.opacity);
+      layer.append(createMediaNode(doc, row, runtimeSources.get(row.id), { loop:true }));
+      appendMonitorLabel(doc, layer, row);
+      applyMediaLevel(layer, settings.muted, 1);
+      root.append(layer);
+    });
+    if (!visible.length) root.append(createSlate(doc, null, 'Cue Sheet Program', 'Output is clear'));
+  }
+
+  function renderStats() {
+    const total = state.rows.length;
+    const done = state.rows.filter(row => row.status === 'Done').length;
+    const issues = state.rows.filter(row => row.status === 'Issue').length;
+    els.totalStat.textContent = String(total);
+    els.openStat.textContent = String(total - done);
+    els.doneStat.textContent = String(done);
+    els.issueStat.textContent = String(issues);
+  }
+
+  function renderNextCue() {
+    const selected = selectedRow();
+    const next = nextOpenRow();
+    els.selectedReadout.textContent = selected ? `${selected.number || 'Cue'} selected` : 'None';
+    if (!next) {
+      els.nextMeta.textContent = 'Complete';
+      els.nextAction.textContent = 'No open cues';
+      els.nextNotes.textContent = 'All cues are marked done or no cues exist.';
+      return;
+    }
+    els.nextMeta.textContent = `${next.number || 'Cue'} | ${next.time || 'No time'} | ${next.status}`;
+    els.nextAction.textContent = next.action || 'Untitled cue';
+    els.nextNotes.textContent = [next.type, next.source, next.owner, next.notes].filter(Boolean).join(' | ') || 'No notes on this cue.';
+  }
+
+  function updateButtons() {
+    const hasSelected = Boolean(selectedRow());
+    els.duplicateBtn.disabled = !hasSelected;
+    els.moveUpBtn.disabled = !hasSelected || selectedIndex() <= 0;
+    els.moveDownBtn.disabled = !hasSelected || selectedIndex() < 0 || selectedIndex() >= state.rows.length - 1;
+    els.deleteBtn.disabled = !hasSelected;
+    els.markDoneBtn.disabled = !hasSelected;
+    els.attachFileBtn.disabled = !hasSelected;
+    els.removeSourceBtn.disabled = !hasSelected || !runtimeSources.has(state.selectedId);
+    els.connectCaptureBtn.disabled = !hasSelected || !els.captureVideoSelect.value;
+    els.connectNetworkBtn.disabled = !hasSelected || !els.networkSourceUrl.value.trim();
+    els.goLiveBtn.disabled = !hasSelected;
+    els.clearLayerBtn.disabled = !hasSelected || !state.activeLayers[selectedRow()?.layer];
+  }
+
+  function selectedRow() {
+    return state.rows.find(row => row.id === state.selectedId);
+  }
+
+  function selectedIndex() {
+    return state.rows.findIndex(row => row.id === state.selectedId);
+  }
+
+  function nextOpenRow() {
+    return state.rows.find(row => row.status !== 'Done');
+  }
+
+  function selectRow(id, options = {}) {
+    if (!state.rows.some(row => row.id === id)) return;
+    state.selectedId = id;
+    saveState();
+    render();
+    if (options.scroll) {
+      const row = els.cueBody.querySelector(`[data-id="${CSS.escape(id)}"]`);
+      row?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+  }
+
+  function selectRowSoft(id) {
+    if (!state.rows.some(row => row.id === id) || state.selectedId === id) return;
+    state.selectedId = id;
+    saveState();
+    els.cueBody.querySelectorAll('tr[data-id]').forEach(row => {
+      row.classList.toggle('selected', row.dataset.id === id);
+    });
+    renderCallerDeck();
+    renderNextCue();
+    updateButtons();
+  }
+
+  function updateField(rowId, field, value) {
+    const row = state.rows.find(item => item.id === rowId);
+    if (!row || !fields.includes(field)) return;
+    const previousLayer = row.layer;
+    if (field === 'status') row[field] = STATUSES.includes(value) ? value : 'Ready';
+    else if (field === 'layer') row[field] = sanitizeLayerNumber(value, previousLayer);
+    else row[field] = String(value).slice(0, 1200);
+    if (field === 'layer' && state.activeLayers[previousLayer] === row.id) {
+      delete state.activeLayers[previousLayer];
+      state.activeLayers[row.layer] = row.id;
+      renderProgram({ play:true });
+    }
+    state.selectedId = rowId;
+    saveState();
+    renderStats();
+    renderNextCue();
+    updateRowShell(rowId);
+    renderCallerDeck();
+    renderPreview();
+    renderLayers();
+  }
+
+  function updateRowShell(rowId) {
+    const row = state.rows.find(item => item.id === rowId);
+    const element = els.cueBody.querySelector(`[data-id="${CSS.escape(rowId)}"]`);
+    if (!row || !element) return;
+    element.className = `${row.id === state.selectedId ? 'selected ' : ''}status-${row.status.toLowerCase()}`;
+  }
+
+  function addCue(preset = {}) {
+    if (preset instanceof Event) preset = {};
+    const newRow = sanitizeRow({
+      number: nextCueNumber(),
+      time: '',
+      type: preset.type || 'Cue',
+      layer: preset.layer || 1,
+      action: preset.action || 'New cue',
+      source: preset.source || '',
+      sourceKind: preset.sourceKind || 'Cue',
+      owner: '',
+      status: 'Ready',
+      notes: ''
+    });
+    const index = selectedIndex();
+    if (index >= 0) {
+      state.rows.splice(index + 1, 0, newRow);
+    } else {
+      state.rows.push(newRow);
+    }
+    state.selectedId = newRow.id;
+    saveState();
+    render();
+    announce(`${newRow.sourceKind} cue added to layer ${newRow.layer}.`, 'success');
+    animateCueEntry(newRow.id);
+    focusSelectedAction();
+  }
+
+  function quickAdd(kind) {
+    const preset = QUICK_PRESETS[kind];
+    if (!preset) return;
+    addCue(preset);
+    if (['Video', 'Audio', 'Image'].includes(kind)) {
+      els.sourceFileInput.dataset.expectedKind = kind;
+      els.sourceFileInput.click();
+    } else if (kind === 'Live') {
+      els.captureVideoSelect.focus();
+      announceSource('Live cue added. Detect a capture card or NDI Virtual Input, then connect it.', 'ready');
+    }
+  }
+
+  function animateCueEntry(id) {
+    if (!motionEnabled || !window.gsap) return;
+    const row = els.cueBody.querySelector(`[data-id="${CSS.escape(id)}"]`);
+    const card = els.callerDeck.querySelector(`[data-caller="${CSS.escape(id)}"]`);
+    window.gsap.from([row, card].filter(Boolean), { autoAlpha:0, x:22, duration:.28, stagger:.045, ease:'power2.out', clearProps:'opacity,visibility,transform' });
+  }
+
+  function nextCueNumber() {
+    const max = state.rows.reduce((highest, row) => {
+      const parsed = parseInt(String(row.number).replace(/\D+/g, ''), 10);
+      return Number.isFinite(parsed) ? Math.max(highest, parsed) : highest;
+    }, 0);
+    return String(max + 1).padStart(3, '0');
+  }
+
+  function duplicateCue() {
+    const row = selectedRow();
+    const index = selectedIndex();
+    if (!row || index < 0) return;
+    const copy = sanitizeRow({ ...row, id: createId(), number: nextCueNumber(), status: 'Ready' });
+    state.rows.splice(index + 1, 0, copy);
+    state.selectedId = copy.id;
+    saveState();
+    render();
+    announce('Cue duplicated.', 'success');
+  }
+
+  function deleteSelected() {
+    const index = selectedIndex();
+    if (index < 0) return;
+    const removed = state.rows[index];
+    releaseRuntimeSource(removed.id);
+    if (state.activeLayers[removed.layer] === removed.id) delete state.activeLayers[removed.layer];
+    state.rows.splice(index, 1);
+    state.selectedId = state.rows[Math.min(index, state.rows.length - 1)]?.id || '';
+    saveState();
+    render();
+    renderProgram();
+    announce('Cue deleted.', 'success');
+  }
+
+  function moveSelected(direction) {
+    const index = selectedIndex();
+    const nextIndex = index + direction;
+    if (index < 0 || nextIndex < 0 || nextIndex >= state.rows.length) return;
+    const [row] = state.rows.splice(index, 1);
+    state.rows.splice(nextIndex, 0, row);
+    saveState();
+    render();
+    announce(direction < 0 ? 'Cue moved up.' : 'Cue moved down.', 'success');
+  }
+
+  function selectRelative(delta) {
+    if (!state.rows.length) return;
+    const visible = visibleRows();
+    if (!visible.length) return;
+    const current = visible.findIndex(row => row.id === state.selectedId);
+    const nextIndex = current < 0 ? 0 : Math.min(visible.length - 1, Math.max(0, current + delta));
+    selectRow(visible[nextIndex].id, { scroll: true });
+  }
+
+  function takeNextCue() {
+    const current = nextOpenRow();
+    if (!current) {
+      announce('No open cues remain.', 'success');
+      return;
+    }
+    takeCueLive(current, { announce:false });
+    current.status = 'Done';
+    const nextIndex = state.rows.findIndex(row => row.id === current.id) + 1;
+    const next = state.rows.slice(nextIndex).find(row => row.status !== 'Done') || state.rows.find(row => row.status !== 'Done');
+    state.selectedId = next?.id || current.id;
+    saveState();
+    render();
+    announce(next ? `Cue ${current.number || ''} done. Next cue selected.` : 'Final cue marked done.', 'success');
+  }
+
+  function markSelectedDone() {
+    const row = selectedRow();
+    if (!row) return;
+    row.status = 'Done';
+    saveState();
+    render();
+    announce('Selected cue marked done.', 'success');
+  }
+
+  function loadSample() {
+    releaseAllRuntimeSources();
+    state.title = SAMPLE_TITLE;
+    state.search = '';
+    state.filter = 'all';
+    state.rows = SAMPLE_ROWS.map(row => sanitizeRow(row));
+    state.layers = DEFAULT_LAYERS.map(layer => ({ ...layer }));
+    state.activeLayers = {};
+    state.selectedId = state.rows[0]?.id || '';
+    saveState();
+    render();
+    renderProgram();
+    announce('Sample cue sheet loaded.', 'success');
+  }
+
+  function clearSheet() {
+    releaseAllRuntimeSources();
+    state.title = 'Untitled Show';
+    state.search = '';
+    state.filter = 'all';
+    state.rows = [];
+    state.selectedId = '';
+    state.activeLayers = {};
+    saveState();
+    render();
+    renderProgram();
+    announce('Cue sheet cleared.', 'success');
+  }
+
+  function exportJson() {
+    const payload = {
+      schema: 'system-by-dave.cue-sheet.v2',
+      exportedAt: new Date().toISOString(),
+      title: state.title,
+      rows: state.rows,
+      layers: state.layers,
+      activeLayers: state.activeLayers
+    };
+    downloadFile(`${fileStem(state.title)}-cue-sheet.json`, JSON.stringify(payload, null, 2), 'application/json');
+    announce('JSON exported.', 'success');
+  }
+
+  function exportCsv() {
+    const header = ['Cue', 'Time', 'Type', 'Action', 'Layer', 'Source Type', 'Source', 'Owner', 'Status', 'Notes'];
+    const lines = [
+      header.map(csvEscape).join(','),
+      ...state.rows.map(row => [row.number, row.time, row.type, row.action, row.layer, row.sourceKind, row.source, row.owner, row.status, row.notes].map(csvEscape).join(','))
+    ];
+    downloadFile(`${fileStem(state.title)}-cue-sheet.csv`, lines.join('\n'), 'text/csv');
+    announce('CSV exported.', 'success');
+  }
+
+  function importJson(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result || ''));
+        const rows = Array.isArray(parsed.rows) ? parsed.rows.map(row => sanitizeRow(row)).filter(Boolean) : [];
+        if (!rows.length) throw new Error('No cue rows found');
+        releaseAllRuntimeSources();
+        state.title = sanitizeText(parsed.title, 'Imported Cue Sheet');
+        state.rows = rows;
+        state.layers = sanitizeLayers(parsed.layers);
+        state.activeLayers = sanitizeActiveLayers(parsed.activeLayers, rows);
+        state.search = '';
+        state.filter = 'all';
+        state.selectedId = rows[0].id;
+        saveState();
+        render();
+        renderProgram();
+        announce('Cue sheet imported.', 'success');
+      } catch (error) {
+        announce('Import failed. Use a Cue Sheet JSON export.', 'error');
+        pulse(els.importBtn, 'error');
+      } finally {
+        els.importFile.value = '';
+      }
+    };
+    reader.onerror = () => {
+      announce('Import failed. File could not be read.', 'error');
+      els.importFile.value = '';
+    };
+    reader.readAsText(file);
+  }
+
+  function sourceKindForFile(file) {
+    const mime = String(file?.type || '').toLowerCase();
+    if (mime.startsWith('video/')) return 'Video';
+    if (mime.startsWith('audio/')) return 'Audio';
+    if (mime.startsWith('image/')) return 'Image';
+    return '';
+  }
+
+  function releaseRuntimeSource(cueId) {
+    const source = runtimeSources.get(cueId);
+    if (!source) return;
+    if (source.stream) source.stream.getTracks().forEach(track => track.stop());
+    if (source.objectUrl) URL.revokeObjectURL(source.objectUrl);
+    runtimeSources.delete(cueId);
+  }
+
+  function releaseAllRuntimeSources() {
+    Array.from(runtimeSources.keys()).forEach(releaseRuntimeSource);
+  }
+
+  function attachSelectedFile(file) {
+    const row = selectedRow();
+    if (!row || !file) return;
+    const kind = sourceKindForFile(file);
+    if (!kind) {
+      announceSource('Unsupported file. Choose a video, audio, or image.', 'error');
+      pulse(els.attachFileBtn, 'error');
+      return;
+    }
+    releaseRuntimeSource(row.id);
+    const objectUrl = URL.createObjectURL(file);
+    runtimeSources.set(row.id, { kind, file, name:file.name, url:objectUrl, objectUrl, version:Date.now() });
+    row.sourceKind = kind;
+    row.type = kind === 'Image' ? 'Graphics' : kind;
+    row.source = file.name.slice(0, 240);
+    if (row.action === 'New cue' || / cue$/i.test(row.action)) row.action = file.name.replace(/\.[^.]+$/, '').slice(0, 240);
+    saveState();
+    render();
+    announceSource(`${kind} attached to cue ${row.number || ''}. Media stays in this browser session.`, 'ready');
+  }
+
+  function removeSelectedSource() {
+    const row = selectedRow();
+    if (!row) return;
+    releaseRuntimeSource(row.id);
+    row.sourceKind = ['Text', 'Color'].includes(row.sourceKind) ? row.sourceKind : 'Cue';
+    row.source = row.sourceKind === 'Cue' ? '' : row.source;
+    if (state.activeLayers[row.layer] === row.id) delete state.activeLayers[row.layer];
+    saveState();
+    render();
+    renderProgram();
+    announceSource('Selected cue source removed.', 'ready');
+  }
+
+  async function detectSources() {
+    if (!navigator.mediaDevices?.getUserMedia || !navigator.mediaDevices?.enumerateDevices) {
+      announceSource('This browser does not expose camera or capture inputs.', 'error');
+      return;
+    }
+    announceSource('Requesting permission to label available inputs…', 'working');
+    const permissionAttempts = await Promise.allSettled([
+      navigator.mediaDevices.getUserMedia({ video:true, audio:false }),
+      navigator.mediaDevices.getUserMedia({ video:false, audio:true })
+    ]);
+    permissionAttempts.forEach(result => {
+      if (result.status === 'fulfilled') result.value.getTracks().forEach(track => track.stop());
+    });
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoInputs = devices.filter(device => device.kind === 'videoinput');
+      const audioInputs = devices.filter(device => device.kind === 'audioinput');
+      els.captureVideoSelect.innerHTML = videoInputs.length
+        ? videoInputs.map((device, index) => `<option value="${escapeHtml(device.deviceId)}">${escapeHtml(device.label || `Video input ${index + 1}`)}</option>`).join('')
+        : '<option value="">No video inputs found</option>';
+      els.captureAudioSelect.innerHTML = '<option value="">No capture audio</option>' + audioInputs.map((device, index) => `<option value="${escapeHtml(device.deviceId)}">${escapeHtml(device.label || `Audio input ${index + 1}`)}</option>`).join('');
+      updateButtons();
+      announceSource(`${videoInputs.length} video and ${audioInputs.length} audio inputs detected.`, videoInputs.length ? 'ready' : 'warn');
+    } catch (error) {
+      announceSource(`Input detection failed: ${error.message}`, 'error');
+    }
+  }
+
+  async function connectCapture() {
+    const row = selectedRow();
+    const videoId = els.captureVideoSelect.value;
+    if (!row || !videoId || !navigator.mediaDevices?.getUserMedia) return;
+    announceSource('Connecting capture input…', 'working');
+    try {
+      const audioId = els.captureAudioSelect.value;
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video:{ deviceId:{ exact:videoId } },
+        audio:audioId ? { deviceId:{ exact:audioId } } : false
+      });
+      releaseRuntimeSource(row.id);
+      const videoLabel = stream.getVideoTracks()[0]?.label || 'Capture input';
+      const audioLabel = stream.getAudioTracks()[0]?.label || '';
+      runtimeSources.set(row.id, { kind:'Live', stream, name:videoLabel, version:Date.now() });
+      row.sourceKind = 'Live';
+      row.type = 'Video';
+      row.source = [videoLabel, audioLabel].filter(Boolean).join(' + ').slice(0, 240);
+      saveState();
+      render();
+      await playMedia(els.previewSurface);
+      announceSource(`${videoLabel} connected${audioLabel ? ' with capture audio' : ''}.`, 'live');
+    } catch (error) {
+      announceSource(`Capture connection failed: ${error.message}`, 'error');
+      pulse(els.connectCaptureBtn, 'error');
+    }
+  }
+
+  function connectNetworkSource() {
+    const row = selectedRow();
+    const raw = els.networkSourceUrl.value.trim();
+    if (!row || !raw) return;
+    let url;
+    try {
+      url = new URL(raw, window.location.href);
+    } catch (error) {
+      announceSource('Enter a valid browser-playable stream URL.', 'error');
+      return;
+    }
+    if (!['https:', 'http:'].includes(url.protocol) || (window.location.protocol === 'https:' && url.protocol !== 'https:')) {
+      announceSource('Use an HTTPS media gateway URL on the published Cue Sheet page.', 'error');
+      return;
+    }
+    releaseRuntimeSource(row.id);
+    runtimeSources.set(row.id, { kind:'Stream', url:url.href, name:url.hostname, version:Date.now() });
+    row.sourceKind = 'Stream';
+    row.type = 'Video';
+    row.source = url.href.slice(0, 240);
+    saveState();
+    render();
+    announceSource('Network stream attached. Preview playback confirms whether this browser supports the gateway format.', 'ready');
+  }
+
+  function takeCueLive(row, options = {}) {
+    if (!row) return;
+    state.activeLayers[row.layer] = row.id;
+    row.status = 'Go';
+    state.selectedId = row.id;
+    saveState();
+    render();
+    renderProgram({ play:true });
+    if (options.announce !== false) {
+      announce(`Cue ${row.number || ''} is live on layer ${row.layer}.`, 'success');
+      announceSource(`${row.action || 'Cue'} taken to program layer ${row.layer}.`, 'live');
+    }
+  }
+
+  function goSelectedLive() {
+    const row = selectedRow();
+    if (!row) return;
+    takeCueLive(row);
+  }
+
+  function clearLayer(layerId, options = {}) {
+    const id = sanitizeLayerNumber(layerId, 0);
+    if (!id || !state.activeLayers[id]) return;
+    delete state.activeLayers[id];
+    saveState();
+    renderLayers();
+    renderProgram();
+    updateButtons();
+    if (options.announce !== false) announceSource(`Program layer ${id} cleared.`, 'ready');
+  }
+
+  function clearSelectedLayer() {
+    const row = selectedRow();
+    if (row) clearLayer(row.layer);
+  }
+
+  function announceSource(message, stateName) {
+    els.sourceStatus.textContent = message;
+    els.sourceConnectionState.textContent = stateName === 'live' ? 'Live' : stateName === 'working' ? 'Working' : stateName === 'error' ? 'Error' : stateName === 'warn' ? 'Check' : 'Ready';
+    els.sourceConnectionState.classList.toggle('go', stateName === 'live' || stateName === 'ready');
+  }
+
+  function applyTimelineMode(expanded, options = {}) {
+    state.ui.timelineExpanded = Boolean(expanded);
+    const targets = document.querySelectorAll('.hero-panel,.quick-add-panel,.caller-deck-panel,.side');
+    const commit = () => {
+      document.body.classList.toggle('timeline-expanded', state.ui.timelineExpanded);
+      els.timelineExpandBtn.textContent = state.ui.timelineExpanded ? 'Restore Workspace' : 'Expand Timeline';
+      els.timelineExpandBtn.setAttribute('aria-pressed', String(state.ui.timelineExpanded));
+      saveState();
+    };
+    if (!motionEnabled || !window.gsap || options.immediate) {
+      commit();
+      return;
+    }
+    if (state.ui.timelineExpanded) {
+      window.gsap.to(targets, { autoAlpha:0, y:-8, duration:.16, stagger:.02, ease:'power2.in', overwrite:true, onComplete:() => {
+        commit();
+        window.gsap.set(targets, { clearProps:'opacity,visibility,transform' });
+        window.gsap.from('.workbench', { autoAlpha:0, scale:.992, duration:.22, ease:'power2.out', clearProps:'opacity,visibility,transform' });
+      } });
+    } else {
+      commit();
+      window.gsap.fromTo(targets, { autoAlpha:0, y:-8 }, { autoAlpha:1, y:0, duration:.2, stagger:.025, ease:'power2.out', clearProps:'opacity,visibility,transform' });
+    }
+  }
+
+  async function detectDisplays() {
+    if (typeof window.getScreenDetails !== 'function') {
+      detectedScreens = [];
+      els.displaySelect.innerHTML = '<option value="default">Default / drag manually</option>';
+      announceSource('Display detection is unavailable in this browser. Open the program window and drag it to the target monitor.', 'warn');
+      return;
+    }
+    try {
+      const details = await window.getScreenDetails();
+      detectedScreens = Array.from(details.screens || []);
+      els.displaySelect.innerHTML = '<option value="default">Default / drag manually</option>' + detectedScreens.map((screen, index) => {
+        const label = screen.label || `Display ${index + 1}${screen.isPrimary ? ' (primary)' : ''}`;
+        return `<option value="${index}">${escapeHtml(label)}</option>`;
+      }).join('');
+      announceSource(`${detectedScreens.length} displays detected. Choose one for the program window.`, 'ready');
+    } catch (error) {
+      announceSource(`Display detection was not granted: ${error.message}`, 'error');
+    }
+  }
+
+  function openProgramWindow() {
+    const screenIndex = Number.parseInt(els.displaySelect.value, 10);
+    const screen = Number.isInteger(screenIndex) ? detectedScreens[screenIndex] : null;
+    const features = screen
+      ? `popup=yes,left=${screen.availLeft},top=${screen.availTop},width=${screen.availWidth},height=${screen.availHeight}`
+      : 'popup=yes,width=1280,height=720';
+    programWindow = window.open('', 'CueSheetProgramOutput', features);
+    if (!programWindow) {
+      announceSource('The program window was blocked. Allow popups for Cue Sheet and try again.', 'error');
+      return;
+    }
+    renderProgramWindow();
+    playMedia(programWindow.document.body);
+    programWindow.focus();
+    announceSource(screen ? 'Program window opened on the selected display.' : 'Program window opened. Drag it to the target monitor if needed.', 'live');
+  }
+
+  function csvEscape(value) {
+    return `"${String(value || '').replaceAll('"', '""')}"`;
+  }
+
+  function fileStem(value) {
+    return String(value || 'show')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 48) || 'show';
+  }
+
+  function downloadFile(filename, content, type) {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 250);
+  }
+
+  function focusSelectedAction() {
+    requestAnimationFrame(() => {
+      const row = els.cueBody.querySelector(`[data-id="${CSS.escape(state.selectedId)}"]`);
+      const input = row?.querySelector('[data-field="action"]');
+      input?.focus();
+      if (input instanceof HTMLTextAreaElement) {
+        input.select();
+      }
+    });
+  }
+
+  function announce(message, type) {
+    els.hint.textContent = message;
+    els.hint.classList.remove('success', 'error');
+    if (type) els.hint.classList.add(type);
+  }
+
+  function pulse(element, type) {
+    if (!element) return;
+    const className = type === 'error' ? 'feedback-error' : 'feedback-success';
+    element.classList.remove('feedback-error', 'feedback-success');
+    void element.offsetWidth;
+    element.classList.add(className);
+    window.setTimeout(() => element.classList.remove(className), 220);
+  }
+
+  function attachPressFeedback(button) {
+    button.addEventListener('pointerdown', () => button.classList.add('is-pressing'));
+    ['pointerup', 'pointercancel', 'pointerleave', 'blur'].forEach(eventName => {
+      button.addEventListener(eventName, () => button.classList.remove('is-pressing'));
+    });
+  }
+
+  els.showTitle.addEventListener('input', () => {
+    state.title = els.showTitle.value.slice(0, 140) || 'Untitled Show';
+    saveState();
+    renderProgramWindow();
+  });
+  els.searchInput.addEventListener('input', () => {
+    state.search = els.searchInput.value;
+    saveState();
+    render();
+  });
+  els.statusFilter.addEventListener('change', () => {
+    state.filter = els.statusFilter.value;
+    saveState();
+    render();
+  });
+  els.cueBody.addEventListener('click', event => {
+    const row = event.target.closest('tr[data-id]');
+    if (row) selectRowSoft(row.dataset.id);
+  });
+  els.callerDeck.addEventListener('click', event => {
+    const card = event.target.closest('[data-caller]');
+    if (card) selectRow(card.dataset.caller, { scroll: true });
+  });
+  els.quickAddGrid.addEventListener('click', event => {
+    const button = event.target.closest('[data-quick-add]');
+    if (button) quickAdd(button.dataset.quickAdd);
+  });
+  els.cueBody.addEventListener('input', event => {
+    const target = event.target;
+    const row = target.closest('tr[data-id]');
+    if (!row || !target.dataset.field) return;
+    updateField(row.dataset.id, target.dataset.field, target.value);
+  });
+  els.cueBody.addEventListener('change', event => {
+    const target = event.target;
+    const row = target.closest('tr[data-id]');
+    if (!row || !target.dataset.field) return;
+    updateField(row.dataset.id, target.dataset.field, target.value);
+    render();
+  });
+  els.layerList.addEventListener('click', event => {
+    const button = event.target.closest('button[data-layer-action]');
+    const shell = event.target.closest('[data-layer]');
+    if (!button || !shell) return;
+    const layerId = sanitizeLayerNumber(shell.dataset.layer, 0);
+    const layer = state.layers.find(item => item.id === layerId);
+    if (!layer) return;
+    if (button.dataset.layerAction === 'visibility') layer.visible = !layer.visible;
+    else if (button.dataset.layerAction === 'mute') layer.muted = !layer.muted;
+    else if (button.dataset.layerAction === 'clear') {
+      clearLayer(layerId);
+      return;
+    }
+    saveState();
+    renderLayers();
+    renderProgram({ play:true });
+  });
+  els.layerList.addEventListener('input', event => {
+    const input = event.target.closest('input[data-layer-action="opacity"]');
+    const shell = event.target.closest('[data-layer]');
+    if (!input || !shell) return;
+    const layer = state.layers.find(item => item.id === sanitizeLayerNumber(shell.dataset.layer, 0));
+    if (!layer) return;
+    layer.opacity = Math.min(1, Math.max(0, Number(input.value)));
+    const output = shell.querySelector('output');
+    if (output) output.textContent = `${Math.round(layer.opacity * 100)}%`;
+    saveState();
+    renderProgram({ play:true });
+  });
+  els.addCueBtn.addEventListener('click', () => addCue());
+  els.timelineExpandBtn.addEventListener('click', () => applyTimelineMode(!state.ui.timelineExpanded));
+  els.attachFileBtn.addEventListener('click', () => els.sourceFileInput.click());
+  els.sourceFileInput.addEventListener('change', () => {
+    attachSelectedFile(els.sourceFileInput.files[0]);
+    els.sourceFileInput.value = '';
+    delete els.sourceFileInput.dataset.expectedKind;
+  });
+  els.removeSourceBtn.addEventListener('click', removeSelectedSource);
+  els.detectSourcesBtn.addEventListener('click', detectSources);
+  els.connectCaptureBtn.addEventListener('click', connectCapture);
+  els.captureVideoSelect.addEventListener('change', updateButtons);
+  els.networkSourceUrl.addEventListener('input', updateButtons);
+  els.connectNetworkBtn.addEventListener('click', connectNetworkSource);
+  els.detectDisplaysBtn.addEventListener('click', detectDisplays);
+  els.openOutputBtn.addEventListener('click', openProgramWindow);
+  els.previewPlayBtn.addEventListener('click', async () => {
+    const results = await playMedia(els.previewSurface);
+    const blocked = results.some(result => result.status === 'rejected');
+    announceSource(blocked ? 'Preview is loaded, but the browser blocked playback.' : 'Preview playback started. Audio follows the preview mute and level controls.', blocked ? 'warn' : 'live');
+  });
+  els.previewPauseBtn.addEventListener('click', () => {
+    pauseMedia(els.previewSurface);
+    announceSource('Preview paused.', 'ready');
+  });
+  els.previewMuteBtn.addEventListener('click', () => {
+    previewMuted = !previewMuted;
+    els.previewMuteBtn.setAttribute('aria-pressed', String(previewMuted));
+    els.previewMuteBtn.textContent = previewMuted ? 'Unmute Preview' : 'Mute Preview';
+    applyMediaLevel(els.previewSurface, previewMuted, els.previewVolume.value);
+    announceSource(previewMuted ? 'Preview audio muted.' : 'Preview audio enabled.', previewMuted ? 'warn' : 'live');
+  });
+  els.previewVolume.addEventListener('input', () => applyMediaLevel(els.previewSurface, previewMuted, els.previewVolume.value));
+  els.goLiveBtn.addEventListener('click', goSelectedLive);
+  els.clearLayerBtn.addEventListener('click', clearSelectedLayer);
+  els.duplicateBtn.addEventListener('click', duplicateCue);
+  els.moveUpBtn.addEventListener('click', () => moveSelected(-1));
+  els.moveDownBtn.addEventListener('click', () => moveSelected(1));
+  els.deleteBtn.addEventListener('click', deleteSelected);
+  els.prevCueBtn.addEventListener('click', () => selectRelative(-1));
+  els.nextCueBtn.addEventListener('click', () => selectRelative(1));
+  els.takeNextBtn.addEventListener('click', takeNextCue);
+  els.markDoneBtn.addEventListener('click', markSelectedDone);
+  els.clearBtn.addEventListener('click', clearSheet);
+  els.sampleBtn.addEventListener('click', loadSample);
+  els.printBtn.addEventListener('click', () => window.print());
+  els.exportJsonBtn.addEventListener('click', exportJson);
+  els.exportCsvBtn.addEventListener('click', exportCsv);
+  els.importBtn.addEventListener('click', () => els.importFile.click());
+  els.importFile.addEventListener('change', () => importJson(els.importFile.files[0]));
+  Array.from(document.querySelectorAll('button')).forEach(attachPressFeedback);
+  document.addEventListener('keydown', event => {
+    const target = event.target;
+    const typing = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement;
+    if (typing) return;
+    if (event.key.toLowerCase() === 'n') {
+      addCue();
+    } else if (event.key.toLowerCase() === 'j') {
+      selectRelative(1);
+    } else if (event.key.toLowerCase() === 'k') {
+      selectRelative(-1);
+    } else if (event.key.toLowerCase() === 'g') {
+      takeNextCue();
+    } else if (event.key.toLowerCase() === 'l') {
+      goSelectedLive();
+    } else if (event.key.toLowerCase() === 'f') {
+      applyTimelineMode(!state.ui.timelineExpanded);
+    } else if (event.key.toLowerCase() === 'd') {
+      markSelectedDone();
+    } else if (event.key === 'Escape' && state.ui.timelineExpanded) {
+      applyTimelineMode(false);
+    } else if (event.key === 'Delete' || event.key === 'Backspace') {
+      deleteSelected();
+    }
+  });
+
+  if (!storage.available) {
+    els.storageStatus.textContent = 'Storage blocked';
+    announce('Cue sheet works, but browser storage is unavailable.', 'error');
+  }
+  applyTimelineMode(state.ui.timelineExpanded, { immediate:true });
+  render();
+  renderProgram();
+})();
+</script>
+<script src="js/sbd-registry.js"></script>
+<script src="js/av-suite-context.js"></script>
+<script src="js/sbd-nav.js" defer></script>
+<script src="js/responsive-tables.js" defer></script>
+<script src="js/sbd-public-nav.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "schema": "system-by-dave.domain-site.v1",
+  "site": "avbydave",
+  "domain": "avbydave.com",
+  "sourceRepository": "DaveHomeAssist/system-by-dave",
+  "sourceCommit": "4528b5d923cf4511b628551b86984580e9d5bc88",
+  "cutover": false,
+  "files": 135,
+  "artifactSha256": "c70f8dfc5579a71f4348ff70b0000b48bf1deb8b94de78c02476ff6a983cdb1b"
+}
