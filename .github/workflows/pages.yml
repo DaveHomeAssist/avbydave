@@ -5,6 +5,11 @@ name: Deploy Pages
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/pages.yml'
+      - '.github/scripts/**'
   workflow_dispatch:
 
 permissions:
@@ -17,11 +22,28 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  contract:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Verify publisher contract
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py' -v
+      - name: Verify read-only metadata access
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/pages_artifact_ready.py --probe-access
+
   deploy:
+    needs: contract
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      PAGES_ARTIFACT_NAME: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       # Actions pinned by SHA, matching system-by-dave's Pages workflow.
       - name: Checkout
@@ -45,12 +67,24 @@ jobs:
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
       - name: Upload artifact
+        id: upload
         if: steps.stage.outputs.ready == 'true'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: _site
+          name: ${{ env.PAGES_ARTIFACT_NAME }}
+
+      - name: Wait for expected Pages artifact metadata
+        if: steps.stage.outputs.ready == 'true'
+        timeout-minutes: 2
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_ARTIFACT_ID: ${{ steps.upload.outputs.artifact_id }}
+        run: python3 .github/scripts/pages_artifact_ready.py
 
       - name: Deploy to GitHub Pages
         if: steps.stage.outputs.ready == 'true'
         id: deployment
         uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
+        with:
+          artifact_name: ${{ env.PAGES_ARTIFACT_NAME }}
