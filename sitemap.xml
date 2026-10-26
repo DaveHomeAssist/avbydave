@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://avbydave.com/</loc>
-    <lastmod>2026-10-17</lastmod>
+    <lastmod>2026-10-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -14,15 +14,21 @@
   </url>
   <url>
     <loc>https://avbydave.com/ProjectorThrow/</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://avbydave.com/ProjectorThrow/Stage3D.html</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://avbydave.com/equipment-lab/</loc>
+    <lastmod>2026-10-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://avbydave.com/av-video/</loc>
@@ -110,7 +116,7 @@
   </url>
   <url>
     <loc>https://avbydave.com/led-wall-calculator.html</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
