@@ -126,7 +126,8 @@ class ArtifactContract(unittest.TestCase):
                     "fc324d3547104276b827a68afc52ff2a11cc49c9", "cd2ce8fcbc39b97be8ca5fce6e763baed58fa128"):
             self.assertIn("@" + pin, source)
         stage = source.split("      - name: Stage site\n", 1)[1].split("      - name: Configure Pages\n", 1)[0]
-        self.assertEqual(hashlib.sha256(stage.encode()).hexdigest(), '3ce5ee2e47bbaf9e947fb1cdd01b4d25fbbb68117e62cb6fa3205bfbd7aca0e5')
+        # Only the root README is excluded; package preservation has behavioral coverage.
+        self.assertEqual(hashlib.sha256(stage.encode()).hexdigest(), 'b0142a4d5264caa58097445cf7fbec79f2eff96d31441d4a73932907a5125b47')
 
 
 if __name__ == "__main__":
