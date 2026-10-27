@@ -58,7 +58,7 @@ jobs:
             exit 0
           fi
           mkdir -p _site
-          rsync -a --exclude='.git' --exclude='.github' --exclude='README.md' --exclude='_site' ./ _site/
+          rsync -a --exclude='.git' --exclude='.github' --exclude='/README.md' --exclude='_site' ./ _site/
           echo "Staged $(find _site -type f | wc -l) files from $(python3 -c 'import json; print(json.load(open("source.json"))["sourceCommit"][:12])')."
           echo "ready=true" >> "$GITHUB_OUTPUT"
 
