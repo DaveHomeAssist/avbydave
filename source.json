@@ -3,8 +3,8 @@
   "site": "avbydave",
   "domain": "avbydave.com",
   "sourceRepository": "DaveHomeAssist/system-by-dave",
-  "sourceCommit": "dba02ce7dfdc3f4648dfa7f12fcb0dfb90274287",
+  "sourceCommit": "006147b8a87523537e07a8c0133c00bda1267c60",
   "cutover": true,
-  "files": 395,
-  "artifactSha256": "85a68e394ad4f19eefaf1fdf9eebadc179c5f3974ea229b27ac700ecf78acfaf"
+  "files": 396,
+  "artifactSha256": "f0335c18c642dcd171bcc7b12e17345dfcb05743b468b17ae4e4c09d77a8034a"
 }
