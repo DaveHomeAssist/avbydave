@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://avbydave.com/</loc>
-    <lastmod>2026-11-26</lastmod>
+    <lastmod>2026-11-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -90,4 +90,5 @@
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url><loc>https://avbydave.com/blog/</loc></url>
 </urlset>
